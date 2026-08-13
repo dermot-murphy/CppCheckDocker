@@ -68,6 +68,9 @@ Coding Standard:
 Build:
 - The primary build action is .github/workflows/build.yml
 
+CI:
+- When verifying a workflow run is annotation-free, sweep EVERY job in the run, not just one. Annotations are per-job — warnings on the Verify/Test/Wiki jobs are invisible when you only query the Build job's check-run ID. Enumerate with `gh api repos/<owner>/<repo>/actions/runs/<run>/jobs --jq '.jobs[].id'` then query `check-runs/<id>/annotations` for each.
+
 ASPICE:
 - ASPICE V4 compliance must be Fully Implemented on all processes required for Level 2
 
