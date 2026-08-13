@@ -4,7 +4,7 @@
 | Field | Value |
 |:--------------|:------------|
 | **Document ID** | CCD-SUP9-001 |
-| **Version** | v1.01 |
+| **Version** | v1.02 |
 | **Date** | 2026-08-13 |
 | **Author** | Dermot Murphy |
 | **Reviewer** | Dermot Murphy |
@@ -20,6 +20,7 @@
 |:--------------|:------------|:------------|:--------------------|
 | v1.00 | 2026-08-13 | Dermot Murphy | Initial issue |
 | v1.01 | 2026-08-13 | Dermot Murphy | Added §5 Process Deviation Records format; referenced CCD-DEV-001 and CCD-DEV-002; promote Draft -> Released (issue #23). |
+| v1.02 | 2026-08-13 | Dermot Murphy | §2.4 and §3.5 reconciled with actual practice: GitHub Issues + PRs are the authoritative record; markdown-under-`documents/reviews/` retained only for cases where prose is required (issue #31, closes audit finding FIND-C). |
 
 ---
 
@@ -83,10 +84,16 @@ Closed (at next release)
 
 ### 2.4 Problem Report Storage
 
-Problem reports are stored as Markdown files in `documents/reviews/` with filename format:
-```
-YYYY-MM-DD_PR-NNN_<short-title>.md
-```
+The authoritative store for problem reports is **GitHub Issues** on this repository. Each problem is opened as an Issue with:
+
+- The `bug` label for defects observed in the deliverable or its CI
+- The `hotfix` label if the fix must land on `main` outside the normal `develop`-first flow (see the Workflow section of CLAUDE.md)
+- A branch name of `feature/BUGFIX-<issue-number>-<abstract>` (or `hotfix/HOTFIX-<n>-<abstract>`)
+- An implementing PR that references the issue and carries the fix
+
+The GitHub Issue thread captures the description, discussion, severity classification, resolution, and closure timestamp. The implementing PR captures the diff, CI verification, and reviewer sign-off. Issue and PR together form the immutable, version-controlled record.
+
+**Markdown records under `documents/reviews/YYYY-MM-DD_PR-NNN_<short-title>.md` are retained only when prose analysis outgrows an Issue thread** — for example, a root-cause investigation with diagrams, cross-project impact write-ups, or precursor material to a deviation record. Small routine problems are not required to have a markdown record; the GitHub Issue is sufficient.
 
 ### 2.5 Regression Prevention
 
@@ -165,10 +172,16 @@ When a Change Request is approved:
 
 ### 3.5 Change Request Storage
 
-Change requests are stored as Markdown files in `documents/reviews/` with filename format:
-```
-YYYY-MM-DD_CR-NNN_<short-title>.md
-```
+The authoritative store for change requests is **GitHub Issues** on this repository. Each CR is opened as an Issue with:
+
+- The `change-request` label (or `feature` for new features)
+- A branch name of `feature/CR-<issue-number>-<abstract>` (or `feature/FEATURE-<n>-<abstract>`) per the Workflow section of CLAUDE.md
+- An implementing PR that references the issue, carries the diff, and includes the per-commit binary-impact and risk table
+- The `pending-merge` label added once the implementing PR merges to `develop`; the Issue closes automatically when the change reaches `main` (see [[project-issues-close-on-main-merge]] and CLAUDE.md convention)
+
+The GitHub Issue thread captures the proposal, impact assessment, decision, and closure. The implementing PR captures the diff and CI verification. Issue and PR together form the immutable, version-controlled record.
+
+**Markdown records under `documents/reviews/YYYY-MM-DD_CR-NNN_<short-title>.md` are retained only when prose expression is required** — for example, a multi-page impact analysis, an architecture-decision record, or a precursor to a deviation record. Small routine CRs are not required to have a markdown record; the GitHub Issue plus the PR body is sufficient.
 
 ### 3.6 Upstream Cppcheck Version Bumps
 
@@ -252,4 +265,4 @@ Both deviations were opened as part of GitHub issue #23 (ASPICE audit-readiness 
 
 ---
 
-*End of CCD-SUP9-001 v1.01*
+*End of CCD-SUP9-001 v1.02*
