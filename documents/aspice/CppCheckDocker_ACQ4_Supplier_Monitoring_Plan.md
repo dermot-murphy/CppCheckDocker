@@ -28,7 +28,7 @@ This document defines the Supplier Monitoring process for the CppCheckDocker pro
 
 The CppCheckDocker deliverable is a container image that integrates and redistributes third-party components. There is no procurement contract or supplier-managed engineering deliverable; instead, the project consumes freely-available upstream releases and open-source assets. This plan therefore addresses ACQ.4 in a **COTS-consumption profile**: how we track upstream changes, what triggers a re-release, and where the evidence lives.
 
-**Parent documents:** CCD-SUP8-001 (Configuration Management Plan), CCD-SUP9-001 (Problem Resolution and Change Request Management Plan)  
+**Parent documents:** CCD-SUP8-001 (Configuration Management Plan), CCD-SUP9-001 (Problem Resolution and Change Request Management Plan)
 **Related documents:** CCD-SPL2-001 (Software Release Plan), CCD-SVD-001 (Software Version Description)
 
 ---
