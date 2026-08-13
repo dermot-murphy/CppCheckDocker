@@ -1,0 +1,10 @@
+.git
+.gitignore
+.github
+README.md
+documents
+test
+*.md
+
+# Un-exclude the MISRA C:2012 rule-texts asset — bundled into the runtime image.
+!documents/assets/misra_c_2012_for_cppcheck.txt

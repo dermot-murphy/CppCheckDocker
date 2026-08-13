@@ -1,0 +1,175 @@
+name: Build, Test, and Publish
+
+on:
+  push:
+    branches: [main, develop, "feature/**", "hotfix/**"]
+  pull_request:
+    branches: [main, develop]
+
+env:
+  CPPCHECK_VERSION: "2.21.1"
+  UBUNTU_VERSION: "24.04"
+  IMAGE_NAME: cppcheck
+  IMAGE_TAG: ci
+
+jobs:
+  Build-Image:
+    name: Build image
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4
+
+      - name: Build image
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          file: Dockerfile
+          load: true
+          tags: ${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}
+          build-args: |
+            CPPCHECK_VERSION=${{ env.CPPCHECK_VERSION }}
+            UBUNTU_VERSION=${{ env.UBUNTU_VERSION }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Record image size
+        run: |
+          size=$(docker image inspect ${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }} --format '{{.Size}}')
+          human=$(numfmt --to=iec --suffix=B "$size")
+          echo "Image size: $human ($size bytes)"
+          echo "IMAGE_SIZE_BYTES=$size" >> "$GITHUB_ENV"
+
+      - name: Export image to artifact
+        run: docker save "${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}" -o /tmp/image.tar
+
+      - name: Upload image artifact
+        uses: actions/upload-artifact@v6
+        with:
+          name: cppcheck-image
+          path: /tmp/image.tar
+          retention-days: 7
+
+  Verify-Version:
+    name: Verify cppcheck version
+    needs: Build-Image
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download image artifact
+        uses: actions/download-artifact@v7
+        with:
+          name: cppcheck-image
+          path: /tmp
+
+      - name: Load image
+        run: docker load -i /tmp/image.tar
+
+      - name: cppcheck --version matches pinned version
+        run: |
+          actual=$(docker run --rm ${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }} --version)
+          expected="Cppcheck ${{ env.CPPCHECK_VERSION }}"
+          echo "actual:   $actual"
+          echo "expected: $expected"
+          if [ "$actual" != "$expected" ]; then
+            echo "::error::Version mismatch — expected '$expected', got '$actual'"
+            exit 1
+          fi
+
+  Run-Integration-Tests:
+    name: Run integration tests
+    needs: Build-Image
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Download image artifact
+        uses: actions/download-artifact@v7
+        with:
+          name: cppcheck-image
+          path: /tmp
+
+      - name: Load image
+        run: docker load -i /tmp/image.tar
+
+      - name: Execute integration test harness
+        run: |
+          chmod +x test/integration/run.sh
+          test/integration/run.sh ${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }} | tee /tmp/integration.log
+
+      - name: Upload integration test log
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: Integration_Test_Output
+          path: /tmp/integration.log
+          retention-days: 30
+
+  Publish-Wiki:
+    name: Publish ASPICE documents to Wiki
+    needs: [Verify-Version, Run-Integration-Tests]
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Clone wiki
+        env:
+          WIKI_TOKEN: ${{ secrets.WIKI_TOKEN }}
+        run: |
+          if [ -z "${WIKI_TOKEN}" ]; then
+            echo "::error::WIKI_TOKEN secret is not set. See documents/aspice/CppCheckDocker_SUP8_CM_Plan.md §5.4 for setup instructions."
+            exit 1
+          fi
+          git clone "https://x-access-token:${WIKI_TOKEN}@github.com/${{ github.repository }}.wiki.git" wiki
+
+      - name: Sync ASPICE documents into wiki
+        run: |
+          # Wiki page names come from the filename stem; slashes/spaces aren't allowed in wiki filenames.
+          # Copy each markdown file to the wiki root with its bare basename.
+          mkdir -p wiki
+          shopt -s nullglob
+          for src in documents/aspice/*.md; do
+            base=$(basename "$src")
+            cp "$src" "wiki/$base"
+          done
+
+          # Build a Home.md index pointing at each document.
+          {
+            echo "# CppCheckDocker — ASPICE Documents"
+            echo
+            echo "Auto-published from \`documents/aspice/\` on branch \`${GITHUB_REF_NAME}\` at commit \`${GITHUB_SHA::7}\`."
+            echo
+            echo "| Document | ASPICE Process |"
+            echo "|:---------|:----------------|"
+            for src in documents/aspice/*.md; do
+              base=$(basename "$src" .md)
+              # Extract the ASPICE Process line from the document header table if present.
+              proc=$(grep -m1 -E '^\| \*\*ASPICE Process\*\* \|' "$src" | sed -E 's/.*\| ([^|]+) \|$/\1/' | sed 's/^ *//; s/ *$//')
+              echo "| [$base]($base) | ${proc:-—} |"
+            done
+          } > wiki/Home.md
+
+      - name: Commit and push wiki
+        working-directory: wiki
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          if git diff --cached --quiet; then
+            echo "No wiki changes to publish."
+            exit 0
+          fi
+          git commit -m "Sync ASPICE documents from ${GITHUB_REF_NAME}@${GITHUB_SHA::7}"
+          git push origin HEAD:master
+
+  AllChecksPassed:
+    name: All checks passed
+    needs: [Verify-Version, Run-Integration-Tests]
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "All required checks passed."
