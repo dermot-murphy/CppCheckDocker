@@ -391,13 +391,18 @@ jobs:
           echo "::notice::Configuration audit (version smoke on published image) passed."
 
   Publish-Wiki:
-    name: Publish ASPICE documents to Wiki
+    name: Publish User Guide and ASPICE documents to Wiki
     needs: [Verify-Version, Run-Integration-Tests]
     if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop')
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
         uses: actions/checkout@v5
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
 
       - name: Clone wiki
         env:
@@ -409,32 +414,21 @@ jobs:
           fi
           git clone "https://x-access-token:${WIKI_TOKEN}@github.com/${{ github.repository }}.wiki.git" wiki
 
-      - name: Sync ASPICE documents into wiki
+      # Wipe wiki contents so removed source docs disappear from the wiki. The
+      # .git dir is preserved; a follow-up `git add -A` re-adds every generated
+      # file and stages the deletions in one commit.
+      - name: Reset wiki working tree
+        working-directory: wiki
         run: |
-          # Wiki page names come from the filename stem; slashes/spaces aren't allowed in wiki filenames.
-          # Copy each markdown file to the wiki root with its bare basename.
-          mkdir -p wiki
-          shopt -s nullglob
-          for src in documents/aspice/*.md; do
-            base=$(basename "$src")
-            cp "$src" "wiki/$base"
-          done
+          find . -mindepth 1 -maxdepth 1 ! -name '.git' -exec rm -rf {} +
 
-          # Build a Home.md index pointing at each document.
-          {
-            echo "# CppCheckDocker — ASPICE Documents"
-            echo
-            echo "Auto-published from \`documents/aspice/\` on branch \`${GITHUB_REF_NAME}\` at commit \`${GITHUB_SHA::7}\`."
-            echo
-            echo "| Document | ASPICE Process |"
-            echo "|:---------|:----------------|"
-            for src in documents/aspice/*.md; do
-              base=$(basename "$src" .md)
-              # Extract the ASPICE Process line from the document header table if present.
-              proc=$(grep -m1 -E '^\| \*\*ASPICE Process\*\* \|' "$src" | sed -E 's/.*\| ([^|]+) \|$/\1/' | sed 's/^ *//; s/ *$//')
-              echo "| [$base]($base) | ${proc:-—} |"
-            done
-          } > wiki/Home.md
+      - name: Regenerate wiki content
+        run: |
+          python scripts/generate_wiki.py \
+            --repo . \
+            --wiki wiki \
+            --ref "${GITHUB_REF_NAME}" \
+            --sha "${GITHUB_SHA}"
 
       - name: Commit and push wiki
         working-directory: wiki
@@ -446,7 +440,7 @@ jobs:
             echo "No wiki changes to publish."
             exit 0
           fi
-          git commit -m "Sync ASPICE documents from ${GITHUB_REF_NAME}@${GITHUB_SHA::7}"
+          git commit -m "Sync wiki from ${GITHUB_REF_NAME}@${GITHUB_SHA::7}"
           git push origin HEAD:master
 
   AllChecksPassed:
