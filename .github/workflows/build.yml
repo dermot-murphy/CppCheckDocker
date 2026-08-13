@@ -47,7 +47,7 @@ jobs:
         run: docker save "${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}" -o /tmp/image.tar
 
       - name: Upload image artifact
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         with:
           name: cppcheck-image
           path: /tmp/image.tar
@@ -102,7 +102,7 @@ jobs:
 
       - name: Upload integration test log
         if: always()
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         with:
           name: Integration_Test_Output
           path: /tmp/integration.log
