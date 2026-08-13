@@ -1,0 +1,182 @@
+name: Poll upstream cppcheck for new releases
+
+# Scheduled + on-demand check for a newer cppcheck upstream release. When a
+# newer stable tag is available, the workflow updates the pinned
+# CPPCHECK_VERSION in Dockerfile and .github/workflows/build.yml and files a
+# bump PR against develop for human review per ACQ.4 §3.1 evaluation criteria.
+#
+# The bump PR carries a pre-populated evaluation checklist and a link to
+# upstream release notes. A reviewer must confirm each criterion before merge.
+
+on:
+  schedule:
+    # 06:00 UTC on the 1st of each month.
+    - cron: '0 6 1 * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  Poll-Cppcheck:
+    name: Check for newer cppcheck release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Read currently pinned version
+        id: current
+        run: |
+          current=$(grep -E '^ARG CPPCHECK_VERSION=' Dockerfile | head -1 | cut -d= -f2)
+          if [ -z "${current}" ]; then
+            echo "::error::Could not read ARG CPPCHECK_VERSION from Dockerfile"
+            exit 1
+          fi
+          echo "current=${current}" >> "$GITHUB_OUTPUT"
+          echo "Current pinned cppcheck: ${current}"
+
+      - name: Fetch latest upstream release tag
+        id: latest
+        run: |
+          # Numeric-only X.Y or X.Y.Z tags are considered releases;
+          # anything else (rc, beta, dev) is skipped.
+          latest=$(git ls-remote --tags --refs https://github.com/danmar/cppcheck.git \
+                   | awk -F/ '{print $NF}' \
+                   | grep -E '^[0-9]+\.[0-9]+(\.[0-9]+)?$' \
+                   | sort -V \
+                   | tail -1)
+          if [ -z "${latest}" ]; then
+            echo "::error::No release-shaped tags found on upstream"
+            exit 1
+          fi
+          echo "latest=${latest}" >> "$GITHUB_OUTPUT"
+          echo "Latest upstream cppcheck: ${latest}"
+
+      - name: Compare versions
+        id: compare
+        env:
+          CURRENT: ${{ steps.current.outputs.current }}
+          LATEST: ${{ steps.latest.outputs.latest }}
+        run: |
+          if [ "${CURRENT}" = "${LATEST}" ]; then
+            echo "no bump required — pinned ${CURRENT} matches upstream ${LATEST}"
+            echo "bump_needed=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          # Confirm LATEST is strictly newer, not just different (guards
+          # against upstream retagging).
+          newer=$(printf '%s\n%s\n' "${CURRENT}" "${LATEST}" | sort -V | tail -1)
+          if [ "${newer}" != "${LATEST}" ]; then
+            echo "no bump required — pinned ${CURRENT} >= upstream ${LATEST}"
+            echo "bump_needed=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          echo "bump required — ${CURRENT} -> ${LATEST}"
+          echo "bump_needed=true" >> "$GITHUB_OUTPUT"
+
+      - name: Prepare bump branch
+        if: steps.compare.outputs.bump_needed == 'true'
+        id: branch
+        env:
+          LATEST: ${{ steps.latest.outputs.latest }}
+        run: |
+          branch="feature/CR-7-Bump_cppcheck_to_${LATEST}"
+          echo "branch=${branch}" >> "$GITHUB_OUTPUT"
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          # Start from origin/develop; reset any pre-existing branch to it so
+          # a stale bump PR from a previous run is refreshed rather than
+          # accumulating conflicting commits.
+          git fetch origin develop
+          if git ls-remote --exit-code --heads origin "${branch}" >/dev/null 2>&1; then
+            git checkout -B "${branch}" origin/develop
+          else
+            git checkout -b "${branch}" origin/develop
+          fi
+
+      - name: Update pinned version in Dockerfile and workflow env
+        if: steps.compare.outputs.bump_needed == 'true'
+        env:
+          CURRENT: ${{ steps.current.outputs.current }}
+          LATEST: ${{ steps.latest.outputs.latest }}
+        run: |
+          sed -i -E "s/^(ARG CPPCHECK_VERSION=).*/\1${LATEST}/" Dockerfile
+          sed -i -E "s/^(  CPPCHECK_VERSION: ).*/\1\"${LATEST}\"/" .github/workflows/build.yml
+
+          echo "--- Dockerfile diff ---"
+          grep -E '^ARG CPPCHECK_VERSION=' Dockerfile
+          echo "--- build.yml env diff ---"
+          grep -E '^  CPPCHECK_VERSION:' .github/workflows/build.yml
+
+      - name: Commit and push bump
+        if: steps.compare.outputs.bump_needed == 'true'
+        env:
+          CURRENT: ${{ steps.current.outputs.current }}
+          LATEST: ${{ steps.latest.outputs.latest }}
+          BRANCH: ${{ steps.branch.outputs.branch }}
+        run: |
+          if git diff --quiet; then
+            echo "No file changes to commit (branch already at target version). Skipping push."
+            exit 0
+          fi
+          git add Dockerfile .github/workflows/build.yml
+          git commit -m "feat(deps): bump cppcheck ${CURRENT} -> ${LATEST}"
+          git push --force-with-lease origin "${BRANCH}"
+
+      - name: Open or refresh bump PR
+        if: steps.compare.outputs.bump_needed == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          CURRENT: ${{ steps.current.outputs.current }}
+          LATEST: ${{ steps.latest.outputs.latest }}
+          BRANCH: ${{ steps.branch.outputs.branch }}
+        run: |
+          # Skip if there's already an open PR for this branch.
+          existing=$(gh pr list --state open --head "${BRANCH}" --json number --jq '.[0].number' || true)
+          if [ -n "${existing}" ]; then
+            echo "PR #${existing} already open for ${BRANCH}; leaving it in place."
+            exit 0
+          fi
+
+          body=$(cat <<EOF
+          Automated bump raised by \`poll-cppcheck.yml\`. Refs #7.
+
+          ## Change
+          Bump pinned cppcheck version: \`${CURRENT}\` -> \`${LATEST}\`.
+
+          - Upstream release notes: <https://github.com/danmar/cppcheck/releases/tag/${LATEST}>
+          - Upstream tag: <https://github.com/danmar/cppcheck/tree/${LATEST}>
+
+          ## Files updated
+          - \`Dockerfile\` — \`ARG CPPCHECK_VERSION=${LATEST}\`
+          - \`.github/workflows/build.yml\` — \`env.CPPCHECK_VERSION: "${LATEST}"\`
+
+          ## ACQ.4 §3.1 evaluation checklist (reviewer to complete)
+          Reference: [CCD-ACQ4-001 §3.1 "Evaluation criteria before bump"](documents/aspice/CppCheckDocker_ACQ4_Supplier_Monitoring_Plan.md#31-sup-001--cppcheck)
+          - [ ] Read upstream release notes for breaking changes
+          - [ ] Verified the tag exists via \`git ls-remote\` (done by this workflow)
+          - [ ] Confirmed no reported regressions on the upstream issue tracker for this release
+          - [ ] Full CI passes on this branch (Build-Image, Verify-Version, Run-Integration-Tests, Scan-Image, Lint)
+          - [ ] Added entry to CCD-ACQ4-001 §7 Supplier-Change Log
+
+          ## Note on CI triggering
+          PRs opened by \`GITHUB_TOKEN\` do not automatically trigger the build workflow. To run CI on this PR, either close-and-reopen it, push an empty commit, or run "Re-run all jobs" from the checks tab.
+          EOF
+          )
+
+          gh pr create \
+            --base develop \
+            --head "${BRANCH}" \
+            --title "feat(deps): bump cppcheck ${CURRENT} -> ${LATEST} (#7)" \
+            --body "${body}"
+
+      - name: Report no-op
+        if: steps.compare.outputs.bump_needed == 'false'
+        run: echo "no bump required"
