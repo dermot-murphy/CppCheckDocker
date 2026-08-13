@@ -4,7 +4,7 @@
 | Field | Value |
 |:--------------|:------------|
 | **Document ID** | CCD-SUP1-001 |
-| **Version** | v1.01 |
+| **Version** | v1.02 |
 | **Date** | 2026-08-13 |
 | **Author** | Dermot Murphy |
 | **Reviewer** | Dermot Murphy |
@@ -20,6 +20,7 @@
 |:--------------|:------------|:------------|:--------------------|
 | v1.00 | 2026-08-13 | Dermot Murphy | Initial issue |
 | v1.01 | 2026-08-13 | Dermot Murphy | Move hadolint (§5.1) from Planned to Active; add pre-commit local + CI enforcement (issue #5) |
+| v1.02 | 2026-08-13 | Dermot Murphy | Move vulnerability scan (§5.2) from Planned to Active; document `.trivyignore` process (issue #6) |
 
 ---
 
@@ -57,7 +58,7 @@ Quality is enforced via CI pipeline gates. A gate failure blocks merge.
 | Integration tests | `Run-Integration-Tests` | shell test harness against sample inputs | **Active** | Fix regression |
 | Dockerfile lint | `Lint` (pre-commit) | `hadolint` | **Active** | Fix lint warning |
 | YAML lint | `Lint` (pre-commit) | `yamllint` | **Active** | Fix lint warning |
-| Image vulnerability scan | `Scan-Image` | `trivy` or `docker scout` | **Planned** | Fix or accept CVE with justification |
+| Image vulnerability scan | `Scan-Image` | `trivy` | **Active** | Fix or accept CVE with justification in `.trivyignore` |
 | Image size regression | `Check-Image-Size` | `docker image inspect` + threshold check | **Planned** | Investigate size increase |
 | All checks | `AllChecksPassed` | Aggregator | **Active** | All above active gates must pass |
 
@@ -90,7 +91,7 @@ Two static-analysis tools apply to this project. The deliverable itself is a Doc
 |:--------------|:------------|:------------|:-------------|:------------|:------------|
 | **hadolint** | Dockerfile best-practice linting | `Dockerfile` | `.hadolint.yaml` | pre-commit (local + CI `Lint` job) | **Active** |
 | **yamllint** | YAML syntax/style linting | `*.yml`, `*.yaml` | `.yamllint.yaml` | pre-commit (local + CI `Lint` job) | **Active** |
-| **trivy** (or Docker Scout) | Container vulnerability scan | Final runtime image | Default vulnerability database | CI: `Scan-Image` | **Planned** |
+| **trivy** | Container vulnerability scan | Final runtime image | `.trivyignore` (suppression file) | CI: `Scan-Image` | **Active** |
 
 ### 5.1 hadolint (Active)
 
@@ -102,9 +103,16 @@ hadolint runs against the `Dockerfile` via pre-commit on every commit and in the
 
 The rule `DL3008` (pin apt-get versions) is intentionally suppressed in `.hadolint.yaml` because this project relies on the Ubuntu base image for CVE-driven package updates. Pinning at Dockerfile level would defeat that mechanism; see §5.2 for the compensating vulnerability-scan gate.
 
-### 5.2 trivy / Docker Scout (Planned)
+### 5.2 trivy (Active)
 
-The final runtime image will be scanned for known CVEs. Findings at severity **CRITICAL** or **HIGH** will block merge unless a documented risk acceptance is attached to the PR. **MEDIUM** and below are advisory.
+The final runtime image is scanned for known CVEs by the CI `Scan-Image` job using [`aquasecurity/trivy-action`](https://github.com/aquasecurity/trivy-action). The job runs two passes against the built image:
+
+1. **Informational** — all severities (`LOW,MEDIUM,HIGH,CRITICAL`) reported as a table and uploaded as the `Image_Scan_Report` artefact (90-day retention).
+2. **Gating** — `HIGH,CRITICAL` only, `exit-code=1`. A finding at these severities fails the job and blocks merge.
+
+**MEDIUM** and below are advisory and do not block.
+
+CVE-level suppressions live in `.trivyignore` at repo root. Each entry must carry an inline comment stating the rationale, an expiry date (or upstream-fix reference), and the reviewer. Suppressions are reviewed at each release per CCD-SPL2-001 §4.
 
 ### 5.3 Note on cppcheck itself
 
@@ -158,7 +166,7 @@ The following records are retained as objective evidence of QA activities:
 | Integration test output | `Integration_Test_Output` artefact | CI |
 | Image manifest and digest | `docker inspect` output logged in CI | CI |
 | hadolint / yamllint report | CI `Lint` job log | GitHub Actions |
-| Vulnerability scan report (planned) | `Image_Scan_Report` artefact | CI |
+| Vulnerability scan report | `Image_Scan_Report` artefact (90-day retention) | CI |
 | Peer review approvals | GitHub PR history | GitHub |
 | Qualification test records | `documents/aspice/records/` | Manual |
 | Problem reports | `documents/reviews/` | Manual |
