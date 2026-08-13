@@ -4,7 +4,7 @@
 | Field | Value |
 |:--------------|:------------|
 | **Document ID** | CCD-SWE4-001 |
-| **Version** | v1.03 |
+| **Version** | v1.04 |
 | **Date** | 2026-08-13 |
 | **Author** | Dermot Murphy |
 | **Reviewer** | Dermot Murphy |
@@ -22,6 +22,7 @@
 | v1.01 | 2026-08-13 | Dermot Murphy | Added §4.6 (MISRA C:2012 provisioning) with UVT-060 and UVT-061 covering SR-028 and SR-029. |
 | v1.02 | 2026-08-13 | Dermot Murphy | Promote Draft -> Released as part of the ASPICE audit-readiness sweep (issue #23); corrected trailing "End of" version citation. |
 | v1.03 | 2026-08-13 | Dermot Murphy | §1 CI execution line no longer cites the non-existent `Run-Unit-Tests` job; explains that UVT execution is folded into the single-tier CI model per CCD-SUP1-001 §6.1 (issue #33, closes audit finding FIND-E). |
+| v1.04 | 2026-08-13 | Dermot Murphy | §2.5 Static Analysis Integration table synchronised with actual state: hadolint and trivy are Active per CCD-SUP1-001 §5.1/§5.2 (issue #34, closes audit finding FIND-F). |
 
 ---
 
@@ -79,14 +80,14 @@ All unit tests run on every push. There is no smoke/component split — the tota
 
 ### 2.5 Static Analysis Integration
 
-Static analysis complements dynamic unit testing:
+Static analysis complements dynamic unit testing. Both tools listed below are Active and enforced by the CI gate stack; see [CCD-SUP1-001](CppCheckDocker_SUP1_Quality_Assurance_Plan.md) §5.1 (hadolint) and §5.2 (trivy) for the authoritative process definition.
 
 | Tool | When Applied | Output |
 |:--------------|:-------------|:------------|
-| **hadolint** (planned) | CI on every push once active; checks `Dockerfile` | Lint report uploaded as `Hadolint_Report` |
-| **trivy / Docker Scout** (planned) | CI on every push once active; scans built image | CVE report uploaded as `Image_Scan_Report` |
+| **hadolint** (Active) | CI `Lint (pre-commit)` job on every push and PR; also runs locally via `.pre-commit-config.yaml`. Checks `Dockerfile`. Rule `DL3008` (pin apt-get versions) is intentionally suppressed - see CCD-SUP1-001 §5.1. | Lint findings inline in the job log; failure blocks merge |
+| **trivy** (Active) | CI `Scan-Image` job on every push and PR. Scans the built runtime image at all severities (informational report) and again gated on HIGH+CRITICAL. | `Image_Scan_Report` artefact (90-day retention); HIGH/CRITICAL findings block merge unless suppressed with justification in `.trivyignore` |
 
-Hadolint findings at severity **Error** will block merge once the CI gate is active. Trivy findings at CVE severity **CRITICAL** or **HIGH** will block merge unless a documented risk acceptance is attached.
+Hadolint findings at severity **Error** block merge. Trivy findings at CVE severity **CRITICAL** or **HIGH** block merge unless a documented risk acceptance is attached in `.trivyignore` (with inline comment, expiry date or upstream-fix reference, and reviewer, per CCD-SUP1-001 §5.2).
 
 ---
 
@@ -180,7 +181,7 @@ All unit tests run on every push. A failing unit test blocks merge to `develop` 
 
 New Mandatory requirements added to the SRS must be accompanied by at least one unit or integration test case before the implementing PR is merged.
 
-**Static analysis:** hadolint (once active) runs on every push against the Dockerfile. Trivy / Docker Scout (once active) runs on every push against the built image.
+**Static analysis:** hadolint runs on every push against the Dockerfile via the `Lint (pre-commit)` job. Trivy runs on every push against the built image via the `Scan-Image` job (HIGH/CRITICAL fail-gated). See CCD-SUP1-001 §5.1 and §5.2 for authoritative process definitions.
 
 ---
 
@@ -199,4 +200,4 @@ New Mandatory requirements added to the SRS must be accompanied by at least one 
 
 ---
 
-*End of CCD-SWE4-001 v1.03*
+*End of CCD-SWE4-001 v1.04*
