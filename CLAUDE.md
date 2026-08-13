@@ -2,7 +2,7 @@ This Product:
 - A Docker image for CppCheck V2.21.1 for use on GitHub Actions
 
 Files & Folders:
-- For file and folder names use lower_snake_case except where a tool or convention mandates otherwise (Dockerfile, README.md, CLAUDE.md, LICENSE, GitHub Actions workflow filenames, and 
+- For file and folder names use lower_snake_case except where a tool or convention mandates otherwise (Dockerfile, README.md, CLAUDE.md, LICENSE, GitHub Actions workflow filenames, and
   ASPICE deliverables which follow <Project>_<Process>_<Title>.md)
 
 Git:

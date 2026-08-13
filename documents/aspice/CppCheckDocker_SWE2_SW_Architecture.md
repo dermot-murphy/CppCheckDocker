@@ -46,7 +46,7 @@ This document is the Software Architectural Design Document (SADD) for the CppCh
 
 The SADD describes the decomposition of the deliverable into logical components (image stages, external interfaces, published tags, CI jobs) and their responsibilities. It provides the architectural basis from which the Software Detailed Design Document (CCD-SWE3-001) is derived, and establishes the component structure used for integration testing (CCD-SWE5-001).
 
-**Parent document:** CCD-SWE1-001 Software Requirements Specification  
+**Parent document:** CCD-SWE1-001 Software Requirements Specification
 **Child document:** CCD-SWE3-001 Software Detailed Design Document
 
 ---

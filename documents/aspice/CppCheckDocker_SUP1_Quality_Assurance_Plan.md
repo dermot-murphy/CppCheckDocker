@@ -4,7 +4,7 @@
 | Field | Value |
 |:--------------|:------------|
 | **Document ID** | CCD-SUP1-001 |
-| **Version** | v1.00 |
+| **Version** | v1.01 |
 | **Date** | 2026-08-13 |
 | **Author** | Dermot Murphy |
 | **Reviewer** | Dermot Murphy |
@@ -19,6 +19,7 @@
 | Version | Date | Author | Change Description |
 |:--------------|:------------|:------------|:--------------------|
 | v1.00 | 2026-08-13 | Dermot Murphy | Initial issue |
+| v1.01 | 2026-08-13 | Dermot Murphy | Move hadolint (§5.1) from Planned to Active; add pre-commit local + CI enforcement (issue #5) |
 
 ---
 
@@ -54,7 +55,8 @@ Quality is enforced via CI pipeline gates. A gate failure blocks merge.
 | Build | `Build-Image` | `docker build` | **Active** | Fix Dockerfile error |
 | Version smoke test | `Verify-Version` | `docker run … --version` | **Active** | Fix build or version pin |
 | Integration tests | `Run-Integration-Tests` | shell test harness against sample inputs | **Active** | Fix regression |
-| Dockerfile lint | `Lint-Dockerfile` | `hadolint` | **Planned** | Fix lint warning |
+| Dockerfile lint | `Lint` (pre-commit) | `hadolint` | **Active** | Fix lint warning |
+| YAML lint | `Lint` (pre-commit) | `yamllint` | **Active** | Fix lint warning |
 | Image vulnerability scan | `Scan-Image` | `trivy` or `docker scout` | **Planned** | Fix or accept CVE with justification |
 | Image size regression | `Check-Image-Size` | `docker image inspect` + threshold check | **Planned** | Investigate size increase |
 | All checks | `AllChecksPassed` | Aggregator | **Active** | All above active gates must pass |
@@ -86,16 +88,19 @@ Two static-analysis tools apply to this project. The deliverable itself is a Doc
 
 | Tool | Purpose | Scope | Configuration | Execution | Status |
 |:--------------|:------------|:------------|:-------------|:------------|:------------|
-| **hadolint** | Dockerfile best-practice linting | `Dockerfile` | `.hadolint.yaml` (default rules) | CI: `Lint-Dockerfile` | **Planned** |
+| **hadolint** | Dockerfile best-practice linting | `Dockerfile` | `.hadolint.yaml` | pre-commit (local + CI `Lint` job) | **Active** |
+| **yamllint** | YAML syntax/style linting | `*.yml`, `*.yaml` | `.yamllint.yaml` | pre-commit (local + CI `Lint` job) | **Active** |
 | **trivy** (or Docker Scout) | Container vulnerability scan | Final runtime image | Default vulnerability database | CI: `Scan-Image` | **Planned** |
 
-### 5.1 hadolint (Planned)
+### 5.1 hadolint (Active)
 
-hadolint will run against the `Dockerfile` on every push. It will check for:
+hadolint runs against the `Dockerfile` via pre-commit on every commit and in the CI `Lint` job on every push and PR. It checks for:
 - Deprecated instructions
 - Missing `--no-install-recommends` on apt-get calls
 - Unpinned base images or packages where pinning is required
 - Layer bloat (multiple `RUN` calls that should be merged)
+
+The rule `DL3008` (pin apt-get versions) is intentionally suppressed in `.hadolint.yaml` because this project relies on the Ubuntu base image for CVE-driven package updates. Pinning at Dockerfile level would defeat that mechanism; see §5.2 for the compensating vulnerability-scan gate.
 
 ### 5.2 trivy / Docker Scout (Planned)
 
@@ -152,7 +157,7 @@ The following records are retained as objective evidence of QA activities:
 | CI build logs | GitHub Actions artefacts | Automatic (30-day retention) |
 | Integration test output | `Integration_Test_Output` artefact | CI |
 | Image manifest and digest | `docker inspect` output logged in CI | CI |
-| hadolint report (planned) | `Hadolint_Report` artefact | CI |
+| hadolint / yamllint report | CI `Lint` job log | GitHub Actions |
 | Vulnerability scan report (planned) | `Image_Scan_Report` artefact | CI |
 | Peer review approvals | GitHub PR history | GitHub |
 | Qualification test records | `documents/aspice/records/` | Manual |

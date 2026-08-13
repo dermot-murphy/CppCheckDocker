@@ -1,0 +1,30 @@
+# Pre-commit hooks — YAML and Dockerfile linting enforced per CLAUDE.md.
+# Install locally with: pip install pre-commit && pre-commit install
+# Run manually with: pre-commit run --all-files
+
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: trailing-whitespace
+        exclude: '(\.patch$|^documents/assets/)'
+      - id: end-of-file-fixer
+        exclude: '(\.patch$|^documents/assets/)'
+      - id: check-added-large-files
+        args: ['--maxkb=1024']
+      - id: check-merge-conflict
+      - id: mixed-line-ending
+        args: ['--fix=lf']
+        exclude: '(\.(bat|cmd|ps1)$|^documents/assets/)'
+
+  - repo: https://github.com/adrienverge/yamllint
+    rev: v1.35.1
+    hooks:
+      - id: yamllint
+        args: ['-c', '.yamllint.yaml']
+
+  - repo: https://github.com/hadolint/hadolint
+    rev: v2.13.1-beta
+    hooks:
+      - id: hadolint-docker
+        args: ['--config', '.hadolint.yaml']
