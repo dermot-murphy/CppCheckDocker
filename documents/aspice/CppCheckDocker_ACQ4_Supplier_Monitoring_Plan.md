@@ -4,7 +4,7 @@
 | Field | Value |
 |:--------------|:------------|
 | **Document ID** | CCD-ACQ4-001 |
-| **Version** | v1.00 |
+| **Version** | v1.01 |
 | **Date** | 2026-08-13 |
 | **Author** | Dermot Murphy |
 | **Reviewer** | Dermot Murphy |
@@ -19,6 +19,7 @@
 | Version | Date | Author | Change Description |
 |:--------------|:------------|:------------|:--------------------|
 | v1.00 | 2026-08-13 | Dermot Murphy | Initial issue |
+| v1.01 | 2026-08-13 | Dermot Murphy | SUP-001 change-detection method now automated via `.github/workflows/poll-cppcheck.yml` (issue #7). |
 
 ---
 
@@ -57,7 +58,7 @@ Cppcheck bundled addons (`misra.py`, `naming.py`, etc.) are part of the cppcheck
 |:--------------|:------------|
 | **Consumed via** | `ARG CPPCHECK_VERSION` in `Dockerfile`; `git clone --depth 1 --branch "${CPPCHECK_VERSION}"` |
 | **Current pinned version** | `2.21.1` |
-| **Change-detection method** | Poll release tags via `git ls-remote --tags https://github.com/danmar/cppcheck.git`. Manual poll for MVP; a scheduled GitHub Actions workflow (planned) will file a bump PR when a new release tag appears. |
+| **Change-detection method** | Automated: [`.github/workflows/poll-cppcheck.yml`](../../.github/workflows/poll-cppcheck.yml) runs on the 1st of each month (and on `workflow_dispatch`), polls `git ls-remote --tags https://github.com/danmar/cppcheck.git`, and files a bump PR against `develop` when a newer release-shaped tag (`X.Y[.Z]`) is available. The PR is pre-populated with the evaluation checklist from this row. |
 | **Recommended cadence** | Check monthly; the upstream typically releases every 1–3 months. |
 | **Evaluation criteria before bump** | 1) Read upstream release notes for breaking changes. 2) Verify the tag exists via `git ls-remote`. 3) Confirm no reported regressions on the upstream issue tracker for the release. |
 | **Bump procedure** | Raise a CR per CCD-SUP9-001 §3.6; update `ARG CPPCHECK_VERSION`; run full CI; publish a new image tag `-r1`. |
@@ -96,7 +97,7 @@ Cppcheck bundled addons (`misra.py`, `naming.py`, etc.) are part of the cppcheck
 
 | Check | Frequency | Owner | Evidence |
 |:--------------|:-----------|:------|:---------|
-| cppcheck upstream tags | Monthly | Author | CR record (or "no change" note in monthly review file) |
+| cppcheck upstream tags | Monthly | `poll-cppcheck.yml` (author reviews auto-raised PR) | Bump PR opened by workflow, or "no bump required" log line in the workflow run |
 | Ubuntu base tag digest | Per CI build (automatic) | CI | Build log records the resolved digest |
 | Ubuntu LTS major release | Per Canonical announcement | Author | CR record filed when a bump is proposed |
 | Ubuntu Security Notices affecting `libpcre3` or `python3` | Continuous (mailing list) | Author | Any hit triggers a PR per CCD-SUP9-001 |
@@ -154,4 +155,4 @@ This plan addresses the following ASPICE v4 Level 2 PA attributes for ACQ.4:
 
 ---
 
-*End of CCD-ACQ4-001 v1.00*
+*End of CCD-ACQ4-001 v1.01*
