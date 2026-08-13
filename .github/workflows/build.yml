@@ -108,6 +108,59 @@ jobs:
           path: /tmp/integration.log
           retention-days: 30
 
+  Scan-Image:
+    name: Scan image for CVEs
+    needs: Build-Image
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Download image artifact
+        uses: actions/download-artifact@v7
+        with:
+          name: cppcheck-image
+          path: /tmp
+
+      - name: Load image
+        run: docker load -i /tmp/image.tar
+
+      - name: Scan image (informational report, all severities)
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          image-ref: ${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}
+          format: table
+          output: /tmp/trivy-report.txt
+          severity: LOW,MEDIUM,HIGH,CRITICAL
+          exit-code: '0'
+          ignore-unfixed: false
+          trivyignores: .trivyignore
+        env:
+          TRIVY_DISABLE_VEX_NOTICE: 'true'
+
+      - name: Print scan report
+        run: cat /tmp/trivy-report.txt
+
+      - name: Upload scan report
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: Image_Scan_Report
+          path: /tmp/trivy-report.txt
+          retention-days: 90
+
+      - name: Fail on HIGH or CRITICAL CVEs
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          image-ref: ${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}
+          format: table
+          severity: HIGH,CRITICAL
+          exit-code: '1'
+          ignore-unfixed: false
+          trivyignores: .trivyignore
+        env:
+          TRIVY_DISABLE_VEX_NOTICE: 'true'
+
   Publish-Wiki:
     name: Publish ASPICE documents to Wiki
     needs: [Verify-Version, Run-Integration-Tests]
@@ -169,7 +222,7 @@ jobs:
 
   AllChecksPassed:
     name: All checks passed
-    needs: [Verify-Version, Run-Integration-Tests]
+    needs: [Verify-Version, Run-Integration-Tests, Scan-Image]
     runs-on: ubuntu-latest
     steps:
       - run: echo "All required checks passed."
