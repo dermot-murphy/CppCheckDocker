@@ -108,6 +108,131 @@ jobs:
           path: /tmp/integration.log
           retention-days: 30
 
+  Release:
+    name: Release image to GHCR and DockerHub
+    needs: [Verify-Version, Run-Integration-Tests]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      packages: write
+    env:
+      GHCR_REPO: ghcr.io/${{ github.repository }}
+      DOCKERHUB_REPO: docker.io/${{ secrets.DOCKERHUB_USERNAME }}/cppcheckdocker
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4
+
+      - name: Lowercase repository owner (GHCR requires lowercase)
+        id: repo
+        run: |
+          lower_repo=$(echo "${{ github.repository }}" | tr '[:upper:]' '[:lower:]')
+          echo "ghcr=ghcr.io/${lower_repo}" >> "$GITHUB_OUTPUT"
+
+      - name: Compute revision suffix
+        id: rev
+        env:
+          VERSION: ${{ env.CPPCHECK_VERSION }}
+        run: |
+          # Count existing v<VERSION>-r<N> git tags and take the next N.
+          existing=$(git tag --list "v${VERSION}-r*" | wc -l)
+          revision=$((existing + 1))
+          tag="${VERSION}-r${revision}"
+          git_tag="v${tag}"
+          echo "revision=${revision}" >> "$GITHUB_OUTPUT"
+          echo "tag=${tag}" >> "$GITHUB_OUTPUT"
+          echo "git_tag=${git_tag}" >> "$GITHUB_OUTPUT"
+          echo "Computed image tag: ${tag}"
+          echo "Computed git tag:  ${git_tag}"
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Log in to DockerHub
+        uses: docker/login-action@v3
+        with:
+          registry: docker.io
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build and push image (multi-registry, immutable + latest)
+        id: push
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          file: Dockerfile
+          push: true
+          tags: |
+            ${{ steps.repo.outputs.ghcr }}:${{ steps.rev.outputs.tag }}
+            ${{ steps.repo.outputs.ghcr }}:latest
+            ${{ env.DOCKERHUB_REPO }}:${{ steps.rev.outputs.tag }}
+            ${{ env.DOCKERHUB_REPO }}:latest
+          build-args: |
+            CPPCHECK_VERSION=${{ env.CPPCHECK_VERSION }}
+            UBUNTU_VERSION=${{ env.UBUNTU_VERSION }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Create annotated git tag
+        env:
+          GIT_TAG: ${{ steps.rev.outputs.git_tag }}
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git tag -a "${GIT_TAG}" -m "Release ${GIT_TAG}"
+          git push origin "${GIT_TAG}"
+
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GIT_TAG: ${{ steps.rev.outputs.git_tag }}
+          IMAGE_TAG_ID: ${{ steps.rev.outputs.tag }}
+          DIGEST: ${{ steps.push.outputs.digest }}
+          GHCR_REPO_LOWER: ${{ steps.repo.outputs.ghcr }}
+        run: |
+          notes=$(cat <<EOF
+          ## CppCheckDocker ${IMAGE_TAG_ID}
+
+          Automated release from commit \`${GITHUB_SHA::7}\` on branch \`main\`.
+
+          ### Published image tags
+
+          | Registry | Tag | Immutable digest |
+          |:---------|:----|:-----------------|
+          | GHCR | \`${GHCR_REPO_LOWER}:${IMAGE_TAG_ID}\` | \`${DIGEST}\` |
+          | GHCR | \`${GHCR_REPO_LOWER}:latest\` | \`${DIGEST}\` |
+          | DockerHub | \`${DOCKERHUB_REPO}:${IMAGE_TAG_ID}\` | \`${DIGEST}\` |
+          | DockerHub | \`${DOCKERHUB_REPO}:latest\` | \`${DIGEST}\` |
+
+          ### Pull
+
+          \`\`\`bash
+          docker pull ${GHCR_REPO_LOWER}:${IMAGE_TAG_ID}
+          docker pull ${DOCKERHUB_REPO}:${IMAGE_TAG_ID}
+          \`\`\`
+
+          ### Contents
+
+          - cppcheck \`${CPPCHECK_VERSION}\` on \`ubuntu:${UBUNTU_VERSION}\`
+          - MISRA C:2012 rule-texts bundled (CC BY-NC-ND 4.0)
+          - Non-root \`cppcheck\` user; \`ENTRYPOINT ["cppcheck"]\`
+
+          The Software Version Description (SVD) for this release will be added under \`documents/aspice/records/CCD-SVD-${IMAGE_TAG_ID}.md\` and linked back to these notes.
+          EOF
+          )
+          gh release create "${GIT_TAG}" \
+            --title "CppCheckDocker ${IMAGE_TAG_ID}" \
+            --notes "${notes}"
+
   Publish-Wiki:
     name: Publish ASPICE documents to Wiki
     needs: [Verify-Version, Run-Integration-Tests]
