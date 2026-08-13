@@ -4,7 +4,7 @@
 | Field | Value |
 |:--------------|:------------|
 | **Document ID** | CCD-RTM-001 |
-| **Version** | v1.03 |
+| **Version** | v1.04 |
 | **Date** | 2026-08-13 |
 | **Author** | Dermot Murphy |
 | **Reviewer** | Dermot Murphy |
@@ -22,6 +22,7 @@
 | v1.01 | 2026-08-13 | Dermot Murphy | Added FEAT-011 (MISRA C:2012 support) with SR-028/SR-029; UVT-060/UVT-061; INT-040; QT-015. Updated coverage summary. |
 | v1.02 | 2026-08-13 | Dermot Murphy | Extended traceability key to include CCD-SPL2-001 (Release Plan) and CCD-SVD-001 (SVD template). |
 | v1.03 | 2026-08-13 | Dermot Murphy | Extended traceability key to include CCD-ACQ4-001 (Supplier Monitoring Plan) with the three suppliers SUP-001..SUP-003. |
+| v1.04 | 2026-08-13 | Dermot Murphy | Updated NFR-002 traceability: `Scan-Image` gate now Active via trivy (issue #6). |
 
 ---
 
@@ -77,7 +78,7 @@ Non-functional requirements (SRS §12) are cross-cutting obligations that apply 
 | NFR ID | Non-Functional Requirement Summary | Verification Method | CI Gate / Evidence |
 |:--------------|:-----------------------------------|:--------------------|:--------------------|
 | NFR-001 | Dockerfile conforms to hadolint default rule set | Static analysis | `Lint-Dockerfile` (planned) |
-| NFR-002 | No CRITICAL/HIGH CVEs in published image | Vulnerability scan | `Scan-Image` (planned) |
+| NFR-002 | No CRITICAL/HIGH CVEs in published image | Vulnerability scan | `Scan-Image` (trivy, active) |
 | NFR-003 | Base image tag pinned via ARG (not `:latest`) | Review | PR review checklist; verified by inspecting `Dockerfile` |
 | NFR-004 | `--no-install-recommends` used on all apt installs | Review | PR review checklist; hadolint DL3015 |
 | NFR-005 | apt lists removed in same `RUN` layer | Review | PR review checklist; hadolint DL3009 |
