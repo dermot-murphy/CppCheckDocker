@@ -4,7 +4,7 @@
 | Field | Value |
 |:--------------|:------------|
 | **Document ID** | CCD-SWE4-001 |
-| **Version** | v1.02 |
+| **Version** | v1.03 |
 | **Date** | 2026-08-13 |
 | **Author** | Dermot Murphy |
 | **Reviewer** | Dermot Murphy |
@@ -21,6 +21,7 @@
 | v1.00 | 2026-08-13 | Dermot Murphy | Initial issue |
 | v1.01 | 2026-08-13 | Dermot Murphy | Added §4.6 (MISRA C:2012 provisioning) with UVT-060 and UVT-061 covering SR-028 and SR-029. |
 | v1.02 | 2026-08-13 | Dermot Murphy | Promote Draft -> Released as part of the ASPICE audit-readiness sweep (issue #23); corrected trailing "End of" version citation. |
+| v1.03 | 2026-08-13 | Dermot Murphy | §1 CI execution line no longer cites the non-existent `Run-Unit-Tests` job; explains that UVT execution is folded into the single-tier CI model per CCD-SUP1-001 §6.1 (issue #33, closes audit finding FIND-E). |
 
 ---
 
@@ -33,7 +34,7 @@ Unit tests for this project inspect **image structure**: they exercise the built
 **Parent document:** CCD-SWE3-001 SDDD
 **Test framework:** bash + `docker` CLI
 **Test location:** `test/unit/`
-**CI execution:** GitHub Actions — job `Verify-Version` (subset) and a broader `Run-Unit-Tests` job
+**CI execution:** UVT cases are executed under the single-tier CI model defined in CCD-SUP1-001 §6.1. There is no dedicated `Run-Unit-Tests` job. Image-sanity UVTs (SR-023 version smoke, presence of required files, image-metadata invariants) are covered by the `Verify-Version` job on every push; the remaining UVTs are exercised as pre-conditions of the `Run-Integration-Tests` job (see the UVT->CI-step mapping in §5). A separate `Run-Unit-Tests` job may be added later if the suite outgrows this arrangement.
 
 ---
 
@@ -198,4 +199,4 @@ New Mandatory requirements added to the SRS must be accompanied by at least one 
 
 ---
 
-*End of CCD-SWE4-001 v1.02*
+*End of CCD-SWE4-001 v1.03*
