@@ -4,11 +4,11 @@
 | Field | Value |
 |:--------------|:------------|
 | **Document ID** | CCD-SWE5-001 |
-| **Version** | v1.01 |
+| **Version** | v1.02 |
 | **Date** | 2026-08-13 |
 | **Author** | Dermot Murphy |
 | **Reviewer** | Dermot Murphy |
-| **Status** | Draft |
+| **Status** | Released |
 | **Classification** | Internal |
 | **ASPICE Process** | SWE.5 — Software Integration and Integration Test |
 
@@ -20,6 +20,7 @@
 |:--------------|:------------|:------------|:--------------------|
 | v1.00 | 2026-08-13 | Dermot Murphy | Initial issue |
 | v1.01 | 2026-08-13 | Dermot Murphy | Added Phase 5 (Addons) with INT-040 (MISRA C:2012 addon end-to-end) covering SR-028/SR-029. |
+| v1.02 | 2026-08-13 | Dermot Murphy | Promote Draft -> Released as part of the ASPICE audit-readiness sweep (issue #23); corrected trailing "End of" version citation. |
 
 ---
 
@@ -177,4 +178,4 @@ The assertion on the human-readable rule text ("The goto statement should not be
 
 ---
 
-*End of CCD-SWE5-001 v1.00*
+*End of CCD-SWE5-001 v1.02*

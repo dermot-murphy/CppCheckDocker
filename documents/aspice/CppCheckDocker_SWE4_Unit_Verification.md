@@ -4,11 +4,11 @@
 | Field | Value |
 |:--------------|:------------|
 | **Document ID** | CCD-SWE4-001 |
-| **Version** | v1.01 |
+| **Version** | v1.02 |
 | **Date** | 2026-08-13 |
 | **Author** | Dermot Murphy |
 | **Reviewer** | Dermot Murphy |
-| **Status** | Draft |
+| **Status** | Released |
 | **Classification** | Internal |
 | **ASPICE Process** | SWE.4 — Software Unit Verification |
 
@@ -20,6 +20,7 @@
 |:--------------|:------------|:------------|:--------------------|
 | v1.00 | 2026-08-13 | Dermot Murphy | Initial issue |
 | v1.01 | 2026-08-13 | Dermot Murphy | Added §4.6 (MISRA C:2012 provisioning) with UVT-060 and UVT-061 covering SR-028 and SR-029. |
+| v1.02 | 2026-08-13 | Dermot Murphy | Promote Draft -> Released as part of the ASPICE audit-readiness sweep (issue #23); corrected trailing "End of" version citation. |
 
 ---
 
@@ -197,4 +198,4 @@ New Mandatory requirements added to the SRS must be accompanied by at least one 
 
 ---
 
-*End of CCD-SWE4-001 v1.00*
+*End of CCD-SWE4-001 v1.02*

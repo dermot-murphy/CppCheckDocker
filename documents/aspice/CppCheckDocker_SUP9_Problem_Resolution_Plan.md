@@ -4,11 +4,11 @@
 | Field | Value |
 |:--------------|:------------|
 | **Document ID** | CCD-SUP9-001 |
-| **Version** | v1.00 |
+| **Version** | v1.01 |
 | **Date** | 2026-08-13 |
 | **Author** | Dermot Murphy |
 | **Reviewer** | Dermot Murphy |
-| **Status** | Draft |
+| **Status** | Released |
 | **Classification** | Internal |
 | **ASPICE Process** | SUP.9 — Problem Resolution Management / SUP.10 — Change Request Management |
 
@@ -19,6 +19,7 @@
 | Version | Date | Author | Change Description |
 |:--------------|:------------|:------------|:--------------------|
 | v1.00 | 2026-08-13 | Dermot Murphy | Initial issue |
+| v1.01 | 2026-08-13 | Dermot Murphy | Added §5 Process Deviation Records format; referenced CCD-DEV-001 and CCD-DEV-002; promote Draft -> Released (issue #23). |
 
 ---
 
@@ -209,4 +210,46 @@ Each affected document must be updated with an incremented version number and a 
 
 ---
 
-*End of CCD-SUP9-001 v1.00*
+## 5. Process Deviation Records
+
+A **process deviation record** documents a formally accepted departure from the ASPICE PAM v4.0 process model. Deviations are used when a required practice cannot be executed as written but the intent is met through compensating controls, or when a required practice is scheduled for time-boxed corrective action rather than immediate implementation.
+
+Process deviations are treated as controlled work products (see [CCD-SUP8-001](CppCheckDocker_SUP8_CM_Plan.md) §2, CI-012) and follow the file naming pattern:
+
+```
+CppCheckDocker_DEV<NNN>_<Short_Title>_Deviation.md
+```
+
+### 5.1 Required Content
+
+Every deviation record shall include:
+
+- **Document Identification & Control** (Deviation ID, version, author, reviewer, approver, status, related ASPICE PA/GP clause)
+- **Document Control** (revision history)
+- **Deviation Summary** (severity, standard clause, affected documents/process, disposition)
+- **Non-Conformance Description** (what the standard requires, actual state, root cause)
+- **Justification for Acceptance** (project context, compensating controls, risk assessment, ASPICE interpretation)
+- **Corrective Action and Retirement Clause** (actions with owner and target date; explicit conditions under which the deviation is retired)
+- **Approval** (author, reviewer, approver sign-off - subject to CCD-DEV-001 while single-engineer)
+- **Referenced Documents** (with correct current version numbers)
+
+### 5.2 Dispositions
+
+| Disposition | Meaning |
+|:------------|:--------|
+| Accepted with justification | Compensating controls satisfy clause intent; deviation is permanent unless a retirement condition is met |
+| Accepted with time-boxed corrective action | Compensating controls apply until a deadline by which the required practice must be executed; retire when the corrective action closes |
+| Rejected | Deviation is not accepted; the required practice must be executed as written |
+
+### 5.3 Current Deviations
+
+| Deviation ID | Title | Disposition | Retirement Condition |
+|:-------------|:------|:------------|:---------------------|
+| [CCD-DEV-001](CppCheckDocker_DEV001_Single_Engineer_Role_Collapse_Deviation.md) | Author, Reviewer, and Approver Are the Same Person | Accepted with justification | A second qualified reviewer joins the project |
+| [CCD-DEV-002](CppCheckDocker_DEV002_Independent_QA_Audit_Deviation.md) | No Independent Internal QA Audit Yet Conducted Against the Baseline | Accepted with time-boxed corrective action (target 2026-11-11) | First audit report filed under `documents/aspice/audits/` with all findings dispositioned |
+
+Both deviations were opened as part of GitHub issue #23 (ASPICE audit-readiness sweep).
+
+---
+
+*End of CCD-SUP9-001 v1.01*

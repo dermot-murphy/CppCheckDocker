@@ -4,11 +4,11 @@
 | Field | Value |
 |:--------------|:------------|
 | **Document ID** | CCD-SPL2-001 |
-| **Version** | v1.01 |
+| **Version** | v1.02 |
 | **Date** | 2026-08-13 |
 | **Author** | Dermot Murphy |
 | **Reviewer** | Dermot Murphy |
-| **Status** | Draft |
+| **Status** | Released |
 | **Classification** | Internal |
 | **ASPICE Process** | SPL.2 — Software Release |
 
@@ -20,6 +20,7 @@
 |:--------------|:------------|:------------|:--------------------|
 | v1.00 | 2026-08-13 | Dermot Murphy | Initial issue |
 | v1.01 | 2026-08-13 | Dermot Murphy | §5.1 clarified: a merge to `main` whose diff touches no image-affecting file does not produce a new tag or release (issue #24). |
+| v1.02 | 2026-08-13 | Dermot Murphy | Promote Draft -> Released as part of the ASPICE audit-readiness sweep (issue #23). |
 
 ---
 
@@ -167,4 +168,4 @@ This plan addresses the following ASPICE v4 Level 2 PA attributes for SPL.2:
 
 ---
 
-*End of CCD-SPL2-001 v1.01*
+*End of CCD-SPL2-001 v1.02*

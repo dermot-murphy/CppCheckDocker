@@ -4,11 +4,11 @@
 | Field | Value |
 |:--------------|:------------|
 | **Document ID** | CCD-SWE1-001 |
-| **Version** | v1.01 |
+| **Version** | v1.02 |
 | **Date** | 2026-08-13 |
 | **Author** | Dermot Murphy |
 | **Reviewer** | Dermot Murphy |
-| **Status** | Draft |
+| **Status** | Released |
 | **Classification** | Internal |
 | **ASPICE Process** | SWE.1 — Software Requirements Analysis |
 
@@ -20,6 +20,7 @@
 |:--------------|:------------|:------------|:--------------------|
 | v1.00 | 2026-08-13 | Dermot Murphy | Initial issue |
 | v1.01 | 2026-08-13 | Dermot Murphy | Added FEAT-011 (MISRA C:2012 support) and SR-028/SR-029 (bundled rule-texts file and `misra-c2012` shim addon); added corresponding traceability rows. |
+| v1.02 | 2026-08-13 | Dermot Murphy | Promote Draft -> Released as part of the ASPICE audit-readiness sweep (issue #23); corrected trailing "End of" version citation. |
 
 ---
 
@@ -273,4 +274,4 @@ The table below maps each software requirement to its parent feature and to the 
 
 ---
 
-*End of CCD-SWE1-001 v1.00*
+*End of CCD-SWE1-001 v1.02*
