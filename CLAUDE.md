@@ -62,6 +62,12 @@ Publication:
 Tools:
 - documents are here documents
 
+Claude Code Memory:
+- The per-project memory Claude Code auto-populates under `~/.claude/projects/<slug>/memory/` is mirrored into the repo at `documents/aspice/claude_memory/`.
+- The mirror is maintained by `scripts/sync_claude_memory.py`, invoked automatically by the `claude-memory-sync` local hook in `.pre-commit-config.yaml`. If the sync produces changes, the hook exits non-zero (standard pre-commit convention) so `git commit` is re-run with the freshly staged files.
+- On a fresh clone where the user-scope memory dir is empty, the script restores it from the repo mirror instead. This makes every workstation self-bootstrap; teammates inherit the accumulated context.
+- Author memory through Claude Code (which writes to the user-scope location); edits made directly under `documents/aspice/claude_memory/` are overwritten on the next commit.
+
 Coding Standard:
 -  YAML files (yamllint) and Dockerfiles (hadolint) must be checked prior to commit; see pre-commit config.
 
