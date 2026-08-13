@@ -28,7 +28,7 @@ This document defines the Software Release process for the CppCheckDocker projec
 
 A **release** is a published Docker image identified by an immutable tag and digest, together with the release-supporting artefacts (Software Version Description, release notes, CI evidence) required to reconstruct or audit that release.
 
-**Parent documents:** CCD-SUP8-001 (Configuration Management Plan), CCD-SWE6-001 (Qualification Test Specification)  
+**Parent documents:** CCD-SUP8-001 (Configuration Management Plan), CCD-SWE6-001 (Qualification Test Specification)
 **Child document:** CCD-SVD-001 (Software Version Description — one instance per release)
 
 ---
@@ -104,7 +104,7 @@ Failure of any entry criterion blocks the release. Deferred failures (waived, do
 
 If automation is unavailable (e.g., GitHub Actions outage), a release may be created manually:
 
-1. Build image locally with pinned ARGs matching the release commit:  
+1. Build image locally with pinned ARGs matching the release commit:
    `docker build --build-arg CPPCHECK_VERSION=<v> --build-arg UBUNTU_VERSION=<u> -t <tag> .`
 2. Run full test suite locally (`build-and-test.bat` or `test/integration/run.sh`)
 3. Push manually: `docker push ghcr.io/<owner>/cppcheckdocker:<tag>`

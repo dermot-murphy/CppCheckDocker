@@ -34,8 +34,8 @@ Integration testing exercises the image in three phases:
 
 Integration tests run on the same GitHub-hosted `ubuntu-latest` runners used for the build; no self-hosted infrastructure is required.
 
-**Parent document:** CCD-SWE2-001 SADD  
-**Test location:** `test/integration/` (samples in `test/samples/`; expected outputs in `test/expected/`)  
+**Parent document:** CCD-SWE2-001 SADD
+**Test location:** `test/integration/` (samples in `test/samples/`; expected outputs in `test/expected/`)
 **CI job:** `Run-Integration-Tests`
 
 ---

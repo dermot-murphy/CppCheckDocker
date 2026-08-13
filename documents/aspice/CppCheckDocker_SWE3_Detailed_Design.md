@@ -42,7 +42,7 @@ This document is the Software Detailed Design Document (SDDD) for the CppCheckDo
 
 The SDDD describes the internal design of each deliverable file: the Dockerfile instruction-by-instruction, the `.dockerignore` rules, the GitHub Actions workflow jobs, and the test harness. It provides the complete specification from which unit verification (CCD-SWE4-001) is derived.
 
-**Parent document:** CCD-SWE2-001 Software Architectural Design Document  
+**Parent document:** CCD-SWE2-001 Software Architectural Design Document
 **Child document:** CCD-SWE4-001 Software Unit Verification Plan
 
 ---
@@ -96,7 +96,7 @@ Repository root/
 
 ## 3. Dockerfile Detailed Design
 
-**File:** `Dockerfile`  
+**File:** `Dockerfile`
 **Architecture ref:** ARC-IMG-001, ARC-IMG-002
 
 ### 3.1 Header and Global ARGs (ARC-IMG-001)
@@ -289,7 +289,7 @@ docker run --rm -v "$(pwd):/work:ro" cppcheck:<tag> \
 
 ## 4. .dockerignore Detailed Design
 
-**File:** `.dockerignore`  
+**File:** `.dockerignore`
 **Architecture ref:** ARC-IMG-003
 
 ```
@@ -315,7 +315,7 @@ test
 
 ## 5. CI Workflow Detailed Design
 
-**File:** `.github/workflows/build.yml` (to be created)  
+**File:** `.github/workflows/build.yml` (to be created)
 **Architecture ref:** ARC-INT-001
 
 ### 5.1 Trigger
@@ -423,7 +423,7 @@ This job is the required check in the branch protection rule for `develop` and `
 
 ## 6. Test Harness Detailed Design
 
-**Directory:** `test/`  
+**Directory:** `test/`
 **Architecture ref:** ARC-INT-002
 
 ### 6.1 test/run.sh

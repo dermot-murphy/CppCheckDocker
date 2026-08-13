@@ -1,0 +1,10 @@
+# Trivy vulnerability suppression file for CppCheckDocker.
+# Format: one CVE ID per line, followed by an inline comment justifying the
+# suppression (rationale, expiry date, upstream fix reference).
+#
+# Suppressions must be reviewed at each release (see CCD-SPL2-001 §4).
+# Empty entries are not permitted.
+#
+# Example:
+#   CVE-2024-99999   # False positive: cppcheck build does not use the affected
+#                    # code path; upstream fix expected in cppcheck 2.22.

@@ -29,8 +29,8 @@ This document is the Software Qualification Test Specification (QTS) for the Cpp
 
 Qualification tests are black-box tests executed against the **published** container image (the image tagged for release and pushed to `ghcr.io`), not against the CI-built local image. They verify that the delivered image meets its stated requirements from the consumer's perspective, with no knowledge of internal Dockerfile structure.
 
-**Parent document:** CCD-SWE1-001 SRS  
-**Image under test:** `ghcr.io/<owner>/cppcheckdocker:<cppcheck-version>-r<revision>`  
+**Parent document:** CCD-SWE1-001 SRS
+**Image under test:** `ghcr.io/<owner>/cppcheckdocker:<cppcheck-version>-r<revision>`
 **Test environment:** A GitHub-hosted `ubuntu-latest` runner in a separate consumer repository (or a fresh workstation with Docker installed)
 
 ---
