@@ -61,6 +61,22 @@ jobs:
           echo "Image size: $human ($size bytes)"
           echo "IMAGE_SIZE_BYTES=$size" >> "$GITHUB_ENV"
 
+      # SR-060: runtime image <= 200 MB. Fail the build on regression so an
+      # accidental size blow-up cannot merge. See CCD-SUP1-001 §3 gate row
+      # "Image size regression" and audit finding FIND-A in
+      # documents/aspice/CppCheckDocker_AUD_2026-08-13_ASPICE_L2_Audit.md.
+      - name: Fail on image size regression (SR-060)
+        env:
+          MAX_MB: '200'
+        run: |
+          max_bytes=$((MAX_MB * 1024 * 1024))
+          if [ "$IMAGE_SIZE_BYTES" -gt "$max_bytes" ]; then
+            human=$(numfmt --to=iec --suffix=B "$IMAGE_SIZE_BYTES")
+            echo "::error::Image size $human ($IMAGE_SIZE_BYTES bytes) exceeds SR-060 threshold of ${MAX_MB} MB. Investigate before merge."
+            exit 1
+          fi
+          echo "::notice::Image size ($IMAGE_SIZE_BYTES bytes) is within the SR-060 ${MAX_MB} MB threshold."
+
       - name: Export image to artifact
         run: docker save "${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}" -o /tmp/image.tar
 
