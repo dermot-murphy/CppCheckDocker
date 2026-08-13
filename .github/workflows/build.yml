@@ -346,6 +346,50 @@ jobs:
             --title "CppCheckDocker ${IMAGE_TAG_ID}" \
             --notes "${notes}"
 
+      # CCD-SUP8-001 §7 Configuration Audit - closes FIND-D from
+      # CCD-AUD-2026-08-13-L2. Verifies that the tag we just pushed resolves,
+      # in each registry, back to the digest reported by the build-push step,
+      # and that cppcheck --version in the published image matches the pinned
+      # ARG. Fails the release on any mismatch.
+      - name: Configuration audit - registry digest round-trip (SUP.8 §7)
+        if: steps.filter.outputs.image == 'true'
+        env:
+          GHCR_TAG: ${{ steps.repo.outputs.ghcr }}:${{ steps.rev.outputs.tag }}
+          DOCKERHUB_TAG: ${{ env.DOCKERHUB_REPO }}:${{ steps.rev.outputs.tag }}
+          PUSH_DIGEST: ${{ steps.push.outputs.digest }}
+        run: |
+          set -e
+          echo "Verifying registries resolve tag to pushed digest: $PUSH_DIGEST"
+          fail=0
+          for tag_ref in "$GHCR_TAG" "$DOCKERHUB_TAG"; do
+            observed=$(docker buildx imagetools inspect "$tag_ref" --format '{{.Manifest.Digest}}')
+            echo "  $tag_ref -> $observed"
+            if [ "$observed" != "$PUSH_DIGEST" ]; then
+              echo "::error::Digest mismatch at $tag_ref: expected $PUSH_DIGEST, got $observed"
+              fail=1
+            fi
+          done
+          if [ "$fail" -ne 0 ]; then
+            exit 1
+          fi
+          echo "::notice::Configuration audit (digest round-trip) passed: both registries resolve $PUSH_DIGEST for tag ${{ steps.rev.outputs.tag }}."
+
+      - name: Configuration audit - version smoke on published image (SUP.8 §7)
+        if: steps.filter.outputs.image == 'true'
+        env:
+          GHCR_TAG: ${{ steps.repo.outputs.ghcr }}:${{ steps.rev.outputs.tag }}
+        run: |
+          set -e
+          pulled=$(docker run --rm "$GHCR_TAG" --version)
+          expected="Cppcheck ${{ env.CPPCHECK_VERSION }}"
+          echo "Pulled : $pulled"
+          echo "Expected: $expected"
+          if [ "$pulled" != "$expected" ]; then
+            echo "::error::Published image version mismatch: expected '$expected', got '$pulled'"
+            exit 1
+          fi
+          echo "::notice::Configuration audit (version smoke on published image) passed."
+
   Publish-Wiki:
     name: Publish ASPICE documents to Wiki
     needs: [Verify-Version, Run-Integration-Tests]
