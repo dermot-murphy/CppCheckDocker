@@ -4,11 +4,11 @@
 | Field | Value |
 |:--------------|:------------|
 | **Document ID** | CCD-SUP1-001 |
-| **Version** | v1.02 |
+| **Version** | v1.03 |
 | **Date** | 2026-08-13 |
 | **Author** | Dermot Murphy |
 | **Reviewer** | Dermot Murphy |
-| **Status** | Draft |
+| **Status** | Released |
 | **Classification** | Internal |
 | **ASPICE Process** | SUP.1 — Quality Assurance |
 
@@ -21,6 +21,7 @@
 | v1.00 | 2026-08-13 | Dermot Murphy | Initial issue |
 | v1.01 | 2026-08-13 | Dermot Murphy | Move hadolint (§5.1) from Planned to Active; add pre-commit local + CI enforcement (issue #5) |
 | v1.02 | 2026-08-13 | Dermot Murphy | Move vulnerability scan (§5.2) from Planned to Active; document `.trivyignore` process (issue #6) |
+| v1.03 | 2026-08-13 | Dermot Murphy | Add §11 referencing CCD-DEV-001 (single-engineer role collapse) and CCD-DEV-002 (independent QA audit gap); promote Draft -> Released (issue #23). |
 
 ---
 
@@ -180,9 +181,33 @@ This plan addresses the following ASPICE v4 Level 2 PA attributes for SUP.1:
 | PA | Attribute | Evidence |
 |:--------------|:------------|:------------|
 | PA 1.1 | Process performance | QA activities performed and recorded in CI |
-| PA 2.1 | Performance management | QA plan defines activities; CI enforces gates |
-| PA 2.2 | Work product management | QA records under version control in Git |
+| PA 2.1 | Performance management | QA plan defines activities; CI enforces gates. **Deviation:** no independent internal QA audit has yet been conducted against the baseline - see [CCD-DEV-002](CppCheckDocker_DEV002_Independent_QA_Audit_Deviation.md), first audit scheduled by 2026-11-11. |
+| PA 2.2 | Work product management | QA records under version control in Git. **Deviation:** Author, Reviewer, and Approver are the same person (Dermot Murphy) - see [CCD-DEV-001](CppCheckDocker_DEV001_Single_Engineer_Role_Collapse_Deviation.md); compensating controls (PR review, CI gate stack, AI-assisted drafting review) apply. |
 
 ---
 
-*End of CCD-SUP1-001 v1.00*
+## 10. Referenced Documents
+
+| Document ID | Title | Version |
+|:------------|:------|:--------|
+| CCD-DEV-001 | Process Deviation - Author, Reviewer, and Approver Are the Same Person | v1.00 |
+| CCD-DEV-002 | Process Deviation - No Independent Internal QA Audit Yet Conducted | v1.00 |
+| CCD-SUP8-001 | Configuration Management Plan | v1.05 |
+| CCD-SUP9-001 | Problem Resolution and Change Request Management Plan | v1.01 |
+| CCD-SPL2-001 | Software Release Plan | v1.02 |
+| CCD-RTM-001 | Master Traceability Matrix | v1.05 |
+
+---
+
+## 11. Process Deviations
+
+The following formal deviations apply to this QA plan and are attached as controlled work products:
+
+- **[CCD-DEV-001](CppCheckDocker_DEV001_Single_Engineer_Role_Collapse_Deviation.md) - Author, Reviewer, and Approver Are the Same Person.** Applies to every QA record in §8 and every ASPICE work product referenced by this plan. Disposition: Accepted with justification, permanent for the lifetime of the project as single-engineer. Retirement: when a second qualified reviewer joins.
+- **[CCD-DEV-002](CppCheckDocker_DEV002_Independent_QA_Audit_Deviation.md) - No Independent Internal QA Audit Yet Conducted Against the Baseline.** Applies to the audit obligation implicit in this plan. Disposition: Accepted with time-boxed corrective action - first audit target 2026-11-11. Retirement: on filing of the first audit report under `documents/aspice/audits/` with all findings dispositioned.
+
+Both deviations were opened as part of GitHub issue #23 (ASPICE audit-readiness sweep).
+
+---
+
+*End of CCD-SUP1-001 v1.03*
