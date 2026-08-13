@@ -13,6 +13,21 @@ env:
   IMAGE_TAG: ci
 
 jobs:
+  Lint:
+    name: Lint (pre-commit)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+
+      - name: Run pre-commit
+        uses: pre-commit/action@v3.0.1
+
   Build-Image:
     name: Build image
     runs-on: ubuntu-latest
@@ -169,7 +184,7 @@ jobs:
 
   AllChecksPassed:
     name: All checks passed
-    needs: [Verify-Version, Run-Integration-Tests]
+    needs: [Lint, Verify-Version, Run-Integration-Tests]
     runs-on: ubuntu-latest
     steps:
       - run: echo "All required checks passed."
