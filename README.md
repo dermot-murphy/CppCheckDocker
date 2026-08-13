@@ -127,6 +127,9 @@ The project targets ASPICE v4 Level 2. The complete document set lives under [`d
 | [SPL.2 Software Release Plan](documents/aspice/CppCheckDocker_SPL2_Software_Release_Plan.md) | Software release |
 | [SVD Software Version Description (template)](documents/aspice/CppCheckDocker_SVD_Software_Version_Description.md) | Per-release record (populated instances under `documents/aspice/records/`) |
 | [RTM Master Traceability Matrix](documents/aspice/CppCheckDocker_RTM_Master_Traceability_Matrix.md) | End-to-end traceability |
+| [PA2 Capability Records](documents/aspice/CppCheckDocker_PA2_Capability_Records.md) | Per-process Level 2 capability ratings (from the internal ASPICE audit) |
+| [SYS Not Applicable stub](documents/aspice/CppCheckDocker_SYS_System_Engineering_NA.md) | Deliberate exclusion of System Engineering (rationale) |
+| [MAN.5 Not Applicable stub](documents/aspice/CppCheckDocker_MAN5_Risk_Management_NA.md) | MAN.5 obligations folded into MAN.3 §8 (rationale) |
 
 ## Licensing
 
