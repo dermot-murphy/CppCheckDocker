@@ -196,16 +196,37 @@ jobs:
         with:
           fetch-depth: 0
 
+      # Skip publish when the merged push touches no image-affecting files.
+      # See CCD-SPL2-001 §5.1 and CCD-SUP8-001 §5.3. Issue #24.
+      - name: Detect image-affecting changes
+        id: filter
+        uses: dorny/paths-filter@v3.0.4
+        with:
+          filters: |
+            image:
+              - 'Dockerfile'
+              - '.dockerignore'
+              - 'documents/assets/misra_c_2012_for_cppcheck.txt'
+              - '.github/workflows/build.yml'
+
+      - name: Skip release (no image-affecting changes)
+        if: steps.filter.outputs.image != 'true'
+        run: |
+          echo "::notice::No image-affecting files changed on this push to main; skipping publish per CCD-SPL2-001 §5.1."
+
       - name: Set up Docker Buildx
+        if: steps.filter.outputs.image == 'true'
         uses: docker/setup-buildx-action@v4
 
       - name: Lowercase repository owner (GHCR requires lowercase)
+        if: steps.filter.outputs.image == 'true'
         id: repo
         run: |
           lower_repo=$(echo "${{ github.repository }}" | tr '[:upper:]' '[:lower:]')
           echo "ghcr=ghcr.io/${lower_repo}" >> "$GITHUB_OUTPUT"
 
       - name: Compute revision suffix
+        if: steps.filter.outputs.image == 'true'
         id: rev
         env:
           VERSION: ${{ env.CPPCHECK_VERSION }}
@@ -222,6 +243,7 @@ jobs:
           echo "Computed git tag:  ${git_tag}"
 
       - name: Log in to GHCR
+        if: steps.filter.outputs.image == 'true'
         uses: docker/login-action@v4
         with:
           registry: ghcr.io
@@ -229,6 +251,7 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Log in to DockerHub
+        if: steps.filter.outputs.image == 'true'
         uses: docker/login-action@v4
         with:
           registry: docker.io
@@ -236,6 +259,7 @@ jobs:
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Build and push image (multi-registry, immutable + latest)
+        if: steps.filter.outputs.image == 'true'
         id: push
         uses: docker/build-push-action@v7
         with:
@@ -254,6 +278,7 @@ jobs:
           cache-to: type=gha,mode=max
 
       - name: Create annotated git tag
+        if: steps.filter.outputs.image == 'true'
         env:
           GIT_TAG: ${{ steps.rev.outputs.git_tag }}
         run: |
@@ -263,6 +288,7 @@ jobs:
           git push origin "${GIT_TAG}"
 
       - name: Create GitHub Release
+        if: steps.filter.outputs.image == 'true'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GIT_TAG: ${{ steps.rev.outputs.git_tag }}

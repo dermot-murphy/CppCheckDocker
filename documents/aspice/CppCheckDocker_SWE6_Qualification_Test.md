@@ -4,11 +4,11 @@
 | Field | Value |
 |:--------------|:------------|
 | **Document ID** | CCD-SWE6-001 |
-| **Version** | v1.01 |
+| **Version** | v1.02 |
 | **Date** | 2026-08-13 |
 | **Author** | Dermot Murphy |
 | **Reviewer** | Dermot Murphy |
-| **Status** | Draft |
+| **Status** | Released |
 | **Classification** | Internal |
 | **ASPICE Process** | SWE.6 — Software Qualification Test |
 
@@ -20,6 +20,7 @@
 |:--------------|:------------|:------------|:--------------------|
 | v1.00 | 2026-08-13 | Dermot Murphy | Initial issue |
 | v1.01 | 2026-08-13 | Dermot Murphy | Added QT-015 (MISRA C:2012 end-to-end) covering SR-028 and SR-029. |
+| v1.02 | 2026-08-13 | Dermot Murphy | Promote Draft -> Released as part of the ASPICE audit-readiness sweep (issue #23); corrected trailing "End of" version citation. |
 
 ---
 
@@ -299,4 +300,4 @@ Each test execution must be recorded with:
 
 ---
 
-*End of CCD-SWE6-001 v1.00*
+*End of CCD-SWE6-001 v1.02*

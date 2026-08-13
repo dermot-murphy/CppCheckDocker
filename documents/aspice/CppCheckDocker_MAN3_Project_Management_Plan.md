@@ -4,11 +4,11 @@
 | Field | Value |
 |:--------------|:------------|
 | **Document ID** | CCD-MAN3-001 |
-| **Version** | v1.02 |
+| **Version** | v1.03 |
 | **Date** | 2026-08-13 |
 | **Author** | Dermot Murphy |
 | **Reviewer** | Dermot Murphy |
-| **Status** | Draft |
+| **Status** | Released |
 | **Classification** | Internal |
 | **ASPICE Process** | MAN.3 — Project Management |
 
@@ -21,6 +21,7 @@
 | v1.00 | 2026-08-13 | Dermot Murphy | Initial issue |
 | v1.01 | 2026-08-13 | Dermot Murphy | Added WBS-15 (Software Release process) and WBS-16 (Software Version Description) for the SPL.2 process area. |
 | v1.02 | 2026-08-13 | Dermot Murphy | Added WBS-17 (Supplier Monitoring) for the ACQ.4 process area covering cppcheck upstream, Ubuntu base image, and MISRA rule-texts as COTS suppliers. |
+| v1.03 | 2026-08-13 | Dermot Murphy | §3 single-engineer note now cites CCD-DEV-001 as the formal deviation record; promote Draft -> Released (issue #23). |
 
 ---
 
@@ -59,6 +60,8 @@ This document is the Project Management Plan (PMP) for the CppCheckDocker projec
 | Approver (release) | Dermot Murphy | Image publication sign-off |
 
 *Note: For a single-engineer team, the Lead Engineer fulfils all roles. For ASPICE Level 2 capability, evidence of self-review and process execution is required. Independent review is recommended as the team grows.*
+
+The role-collapse condition (Author = Reviewer = Approver = Dermot Murphy) is formally captured as [CCD-DEV-001 - Author, Reviewer, and Approver Are the Same Person](CppCheckDocker_DEV001_Single_Engineer_Role_Collapse_Deviation.md). That deviation documents the compensating controls (PR review, CI gate stack, AI-assisted drafting review, systematic self-review against clause intent) and sets a retirement clause: retire when a second qualified reviewer joins the project. RSK-005 in §8 is the corresponding risk-register entry.
 
 ---
 
@@ -166,4 +169,4 @@ Progress is monitored through:
 
 ---
 
-*End of CCD-MAN3-001 v1.00*
+*End of CCD-MAN3-001 v1.03*

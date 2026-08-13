@@ -4,11 +4,11 @@
 | Field | Value |
 |:--------------|:------------|
 | **Document ID** | CCD-SUP8-001 |
-| **Version** | v1.03 |
+| **Version** | v1.05 |
 | **Date** | 2026-08-13 |
 | **Author** | Dermot Murphy |
 | **Reviewer** | Dermot Murphy |
-| **Status** | Draft |
+| **Status** | Released |
 | **Classification** | Internal |
 | **ASPICE Process** | SUP.8 — Configuration Management |
 
@@ -22,6 +22,8 @@
 | v1.01 | 2026-08-13 | Dermot Murphy | Added CI-010 (MISRA C:2012 rule-texts asset) under configuration control. |
 | v1.02 | 2026-08-13 | Dermot Murphy | Added CI-011 (release records: SVD instances and QT records) under configuration control, aligned with CCD-SPL2-001 §7. |
 | v1.03 | 2026-08-13 | Dermot Murphy | §5.3 Release job now Active; §5.4 DockerHub secrets added; document DockerHub publishing alongside GHCR (issue #4). |
+| v1.04 | 2026-08-13 | Dermot Murphy | §5.3 Release row: note skip condition when merged diff touches no image-affecting files (issue #24). |
+| v1.05 | 2026-08-13 | Dermot Murphy | Added CI-012 (deviation records: CCD-DEV-001, CCD-DEV-002) under configuration control; promote Draft -> Released (issue #23). |
 
 ---
 
@@ -48,6 +50,7 @@ The following items are under configuration control:
 | CI-009 | Repository README and top-level docs | `README.md` | Git |
 | CI-010 | MISRA C:2012 rule-texts asset | `documents/assets/misra_c_2012_for_cppcheck.txt` — MISRA Consortium file, CC BY-NC-ND 4.0. Bundled into runtime image at `/opt/cppcheck/share/cppcheck/misra_c_2012_for_cppcheck.txt`. Not modified from upstream release. | Git |
 | CI-011 | Release records | `documents/aspice/records/CCD-SVD-<tag>.md` (Software Version Description per release, per CCD-SVD-001 template) and `documents/aspice/records/CCD-QTR-<tag>.md` (Qualification Test records per release) | Git |
+| CI-012 | Process deviation records | `documents/aspice/CppCheckDocker_DEV001_Single_Engineer_Role_Collapse_Deviation.md` (CCD-DEV-001) and `documents/aspice/CppCheckDocker_DEV002_Independent_QA_Audit_Deviation.md` (CCD-DEV-002). Formal deviations issued under issue #23; retirement clauses recorded in each document. | Git |
 
 ---
 
@@ -129,7 +132,7 @@ docker build \
 | `Run-Integration-Tests` | Every push | Execute test scripts against known-defective sample sources |
 | `Lint-Dockerfile` (planned) | Every push | Run hadolint against the Dockerfile |
 | `Scan-Image` (planned) | Every push | Trivy / Docker Scout vulnerability scan |
-| `Release` | Push to `main` | Build image, push to GHCR and DockerHub with `<version>-r<rev>` and `latest` tags, create annotated git tag and GitHub Release, record image digest in the Release body |
+| `Release` | Push to `main` when the merged diff touches an image-affecting file | Build image, push to GHCR and DockerHub with `<version>-r<rev>` and `latest` tags, create annotated git tag and GitHub Release, record image digest in the Release body. **Skip condition:** the job runs on every push to `main` but early-exits (emitting a `::notice::` line and returning success without publishing) when the diff `github.event.before..github.sha` touches none of `Dockerfile`, `.dockerignore`, `documents/assets/misra_c_2012_for_cppcheck.txt`, or `.github/workflows/build.yml`. Skip is implemented via `dorny/paths-filter@v3.0.4` — see build.yml. Rationale: doc-only, workflow-only-non-image, or test-only merges to `main` should not consume a revision number. |
 
 ### 5.4 GitHub Actions Secrets
 
@@ -175,4 +178,4 @@ The audit checks:
 
 ---
 
-*End of CCD-SUP8-001 v1.03*
+*End of CCD-SUP8-001 v1.05*

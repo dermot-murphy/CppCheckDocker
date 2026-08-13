@@ -4,11 +4,11 @@
 | Field | Value |
 |:--------------|:------------|
 | **Document ID** | CCD-SWE2-001 |
-| **Version** | v1.01 |
+| **Version** | v1.02 |
 | **Date** | 2026-08-13 |
 | **Author** | Dermot Murphy |
 | **Reviewer** | Dermot Murphy |
-| **Status** | Draft |
+| **Status** | Released |
 | **Classification** | Internal |
 | **ASPICE Process** | SWE.2 — Software Architectural Design |
 
@@ -20,6 +20,7 @@
 |:--------------|:------------|:------------|:--------------------|
 | v1.00 | 2026-08-13 | Dermot Murphy | Initial issue |
 | v1.01 | 2026-08-13 | Dermot Murphy | Added ARC-RUN-010 (MISRA shim addon) covering SR-028/SR-029 introduced in SRS v1.01. |
+| v1.02 | 2026-08-13 | Dermot Murphy | Promote Draft -> Released as part of the ASPICE audit-readiness sweep (issue #23); corrected trailing "End of" version citation. |
 
 ---
 
@@ -521,4 +522,4 @@ The table below maps software requirements from CCD-SWE1-001 to the architectura
 
 ---
 
-*End of CCD-SWE2-001 v1.00*
+*End of CCD-SWE2-001 v1.02*

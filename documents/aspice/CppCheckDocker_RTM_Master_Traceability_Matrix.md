@@ -4,11 +4,11 @@
 | Field | Value |
 |:--------------|:------------|
 | **Document ID** | CCD-RTM-001 |
-| **Version** | v1.04 |
+| **Version** | v1.05 |
 | **Date** | 2026-08-13 |
 | **Author** | Dermot Murphy |
 | **Reviewer** | Dermot Murphy |
-| **Status** | Draft |
+| **Status** | Released |
 | **Classification** | Internal |
 | **ASPICE Process** | All SWE — Full Traceability |
 
@@ -23,6 +23,7 @@
 | v1.02 | 2026-08-13 | Dermot Murphy | Extended traceability key to include CCD-SPL2-001 (Release Plan) and CCD-SVD-001 (SVD template). |
 | v1.03 | 2026-08-13 | Dermot Murphy | Extended traceability key to include CCD-ACQ4-001 (Supplier Monitoring Plan) with the three suppliers SUP-001..SUP-003. |
 | v1.04 | 2026-08-13 | Dermot Murphy | Updated NFR-002 traceability: `Scan-Image` gate now Active via trivy (issue #6). |
+| v1.05 | 2026-08-13 | Dermot Murphy | Promote Draft -> Released as part of the ASPICE audit-readiness sweep (issue #23); corrected trailing "End of" version citation. |
 
 ---
 
@@ -249,4 +250,4 @@ When any SR is added, modified, or retired, this matrix must be updated in the s
 
 ---
 
-*End of CCD-RTM-001 v1.00*
+*End of CCD-RTM-001 v1.05*
