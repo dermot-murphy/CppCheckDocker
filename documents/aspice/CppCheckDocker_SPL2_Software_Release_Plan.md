@@ -4,7 +4,7 @@
 | Field | Value |
 |:--------------|:------------|
 | **Document ID** | CCD-SPL2-001 |
-| **Version** | v1.00 |
+| **Version** | v1.01 |
 | **Date** | 2026-08-13 |
 | **Author** | Dermot Murphy |
 | **Reviewer** | Dermot Murphy |
@@ -19,6 +19,7 @@
 | Version | Date | Author | Change Description |
 |:--------------|:------------|:------------|:--------------------|
 | v1.00 | 2026-08-13 | Dermot Murphy | Initial issue |
+| v1.01 | 2026-08-13 | Dermot Murphy | §5.1 clarified: a merge to `main` whose diff touches no image-affecting file does not produce a new tag or release (issue #24). |
 
 ---
 
@@ -90,13 +91,10 @@ Failure of any entry criterion blocks the release. Deferred failures (waived, do
 
 1. PR merged to `main` on a commit that satisfies all entry criteria (§4)
 2. `Build-Image`, `Verify-Version`, `Run-Integration-Tests`, `AllChecksPassed` jobs run automatically
-3. `Release` job (see CCD-SUP8-001 §5.3) runs on `main`:
-   - Tags the image `<cppcheck-version>-r<revision>` and `latest`
-   - Pushes to `ghcr.io` (and to DockerHub if the DockerHub secret is configured)
-   - Creates a git tag `v<cppcheck-version>-r<revision>`
-   - Creates a GitHub Release attached to the git tag
-   - Records the pushed image digest in the Release notes body
-4. `Publish-Wiki` job (see build.yml) publishes the tagged versions of the ASPICE documents to the repository wiki
+3. `Release` job (see CCD-SUP8-001 §5.3) runs on `main`. The job first evaluates a paths filter over the merged diff (`github.event.before..github.sha`) against the set of image-affecting files (`Dockerfile`, `.dockerignore`, `documents/assets/misra_c_2012_for_cppcheck.txt`, `.github/workflows/build.yml`):
+   - **If any image-affecting file changed:** the job proceeds to tag the image `<cppcheck-version>-r<revision>` and `latest`, push to `ghcr.io` (and to DockerHub if the DockerHub secret is configured), create a git tag `v<cppcheck-version>-r<revision>`, create a GitHub Release attached to the git tag, and record the pushed image digest in the Release notes body.
+   - **If none changed:** the job emits a `::notice::` line and exits with success. **No image is built, no tag is cut, no release is created, and no revision number is consumed.** A merge to `main` whose diff is doc-only, test-only, or otherwise non-image will therefore not produce a new `v<version>-r<n>` tag. The next real release still gets the correctly-incremented revision because the revision counter derives from existing git tags, not from a checked-in counter.
+4. `Publish-Wiki` job (see build.yml) publishes the tagged versions of the ASPICE documents to the repository wiki (this job runs regardless of the paths filter — the wiki tracks doc changes independently of image releases).
 5. Author populates and commits `documents/aspice/records/CCD-SVD-<tag>.md` (template CCD-SVD-001), including the digest recorded in the Release notes
 6. Author reviews and self-approves the SVD, then updates the Release notes to link to the committed SVD
 
@@ -169,4 +167,4 @@ This plan addresses the following ASPICE v4 Level 2 PA attributes for SPL.2:
 
 ---
 
-*End of CCD-SPL2-001 v1.00*
+*End of CCD-SPL2-001 v1.01*
