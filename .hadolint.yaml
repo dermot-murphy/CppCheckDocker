@@ -1,0 +1,14 @@
+# Hadolint configuration for CppCheckDocker.
+# https://github.com/hadolint/hadolint#configure
+
+failure-threshold: warning
+
+ignored:
+  # DL3008 — pin apt-get versions. We deliberately track the Ubuntu base
+  # image's package versions so security updates flow via base image rebuilds
+  # rather than requiring a Dockerfile edit. Version pinning here would defeat
+  # the security posture (see CCD-SUP1-001 §5.2).
+  - DL3008
+
+trustedRegistries:
+  - docker.io
