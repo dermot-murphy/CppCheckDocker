@@ -29,9 +29,9 @@ This document is the Software Unit Verification Plan (UVP) for the CppCheckDocke
 
 Unit tests for this project inspect **image structure**: they exercise the built image without applying it to a source tree. Analysis-behaviour tests (image + source) are integration tests and belong to CCD-SWE5-001.
 
-**Parent document:** CCD-SWE3-001 SDDD  
-**Test framework:** bash + `docker` CLI  
-**Test location:** `test/unit/`  
+**Parent document:** CCD-SWE3-001 SDDD
+**Test framework:** bash + `docker` CLI
+**Test location:** `test/unit/`
 **CI execution:** GitHub Actions — job `Verify-Version` (subset) and a broader `Run-Unit-Tests` job
 
 ---

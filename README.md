@@ -83,6 +83,24 @@ docker build --build-arg CPPCHECK_VERSION=2.20.0 -t cppcheck:2.20.0 .
 
 `CPPCHECK_VERSION` accepts any git tag from [danmar/cppcheck](https://github.com/danmar/cppcheck/tags).
 
+### Pre-commit hooks (optional but recommended)
+
+Install [pre-commit](https://pre-commit.com/) once per clone to catch Dockerfile and YAML lint issues before you push. The same hooks run in CI (`Lint` job) — failing locally saves a round-trip.
+
+```bash
+pip install pre-commit
+pre-commit install
+pre-commit run --all-files
+```
+
+Hooks configured in [`.pre-commit-config.yaml`](.pre-commit-config.yaml):
+
+- `hadolint` — Dockerfile best-practice linting (config: [`.hadolint.yaml`](.hadolint.yaml))
+- `yamllint` — YAML syntax and style (config: [`.yamllint.yaml`](.yamllint.yaml))
+- trailing-whitespace / end-of-file / mixed-line-ending hygiene fixers
+
+The hadolint hook uses `hadolint-docker` — Docker must be running locally to invoke it (already required for the image build).
+
 ## Continuous integration
 
 The [`.github/workflows/build.yml`](.github/workflows/build.yml) workflow builds the image, runs the integration tests, and — on pushes to `main` or `develop` — publishes the ASPICE documentation set to the repository's GitHub Wiki.
