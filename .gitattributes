@@ -1,0 +1,24 @@
+# Normalise line endings for all text files to LF at check-in and check-out.
+# Windows developers still see LF; Linux CI runs (Docker builds, bash scripts,
+# GitHub Actions) require LF and would otherwise fail on CRLF inputs.
+
+* text=auto eol=lf
+
+# Windows-only scripts stay CRLF.
+*.bat  text eol=crlf
+*.cmd  text eol=crlf
+*.ps1  text eol=crlf
+
+# Binaries — never touch.
+*.png  binary
+*.jpg  binary
+*.jpeg binary
+*.gif  binary
+*.pdf  binary
+*.ico  binary
+*.zip  binary
+*.tar  binary
+*.gz   binary
+
+# Third-party asset — preserve upstream formatting (CC BY-NC-ND 4.0).
+documents/assets/misra_c_2012_for_cppcheck.txt -text

@@ -1,0 +1,27 @@
+---
+extends: default
+
+rules:
+  # GitHub Actions workflow lines are commonly wider than 80 chars.
+  line-length:
+    max: 200
+    level: warning
+
+  # GitHub Actions uses `on:` as a mapping key — the default `truthy` rule
+  # flags this as ambiguous with `on: yes/no`. Explicitly allow it.
+  truthy:
+    allowed-values: ['true', 'false']
+    check-keys: false
+
+  # Allow both 2-space indent and the more relaxed sequence indentation
+  # style that yamllint's default enforces on nested lists.
+  indentation:
+    spaces: 2
+    indent-sequences: consistent
+
+  # Allow explicit document start markers but do not require them.
+  document-start:
+    present: false
+
+ignore: |
+  documents/**

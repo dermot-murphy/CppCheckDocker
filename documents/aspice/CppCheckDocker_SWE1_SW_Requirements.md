@@ -51,10 +51,10 @@ The SRS defines all software requirements derived from the project's product fea
 
 ## 2. Scope
 
-**Deliverable:** OCI-compliant container image  
-**Base:** Ubuntu 24.04 LTS (parametrised)  
-**Payload:** cppcheck built from upstream source at a pinned release tag  
-**Distribution:** GitHub Container Registry (`ghcr.io`) — free for public and reasonable-limit private images  
+**Deliverable:** OCI-compliant container image
+**Base:** Ubuntu 24.04 LTS (parametrised)
+**Payload:** cppcheck built from upstream source at a pinned release tag
+**Distribution:** GitHub Container Registry (`ghcr.io`) — free for public and reasonable-limit private images
 **Consumer:** GitHub Actions workflows in other Sensoteq (and third-party) repositories
 
 This SRS covers the Dockerfile, its `.dockerignore`, the CI workflows that build and publish the image, and the test assets that verify it. It excludes the upstream cppcheck source (owned by the `danmar/cppcheck` project) and the Ubuntu base image (owned by Canonical), both of which are treated as third-party COTS components.

@@ -2,7 +2,7 @@ This Product:
 - A Docker image for CppCheck V2.21.1 for use on GitHub Actions
 
 Files & Folders:
-- For file and folder names use lower_snake_case except where a tool or convention mandates otherwise (Dockerfile, README.md, CLAUDE.md, LICENSE, GitHub Actions workflow filenames, and 
+- For file and folder names use lower_snake_case except where a tool or convention mandates otherwise (Dockerfile, README.md, CLAUDE.md, LICENSE, GitHub Actions workflow filenames, and
   ASPICE deliverables which follow <Project>_<Process>_<Title>.md)
 
 Git:
@@ -27,7 +27,7 @@ Workflow:
 The workflow is gitflow:
 - a new branch name for a bug fix (issue label bug) is "feature/BUGFIX-"<Github issue number>-<github issue abstract>
 - a new branch name for a new feature request (issue label feature) is "feature/FEATURE-"<Github issue number>-<github issue abstract>
-- a new branch name for a change request or enhancement (issue label enhancement) is "feature/CR-"<Github issue number>-<github issue abstract>
+- a new branch name for a change-request or enhancement (issue label change-request) is "feature/CR-"<Github issue number>-<github issue abstract>
 - if the fix is a hotfix (issue label hotfix), the new branch name is  hotfix/HOTFIX-"<Github issue number>-<github issue abstract>
 - the github issue abstract has spaces, colons, underscores replaced with underscore
 - for a feature or bug fix:
