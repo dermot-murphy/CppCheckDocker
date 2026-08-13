@@ -4,7 +4,7 @@
 | Field | Value |
 |:--------------|:------------|
 | **Document ID** | CCD-SUP8-001 |
-| **Version** | v1.02 |
+| **Version** | v1.03 |
 | **Date** | 2026-08-13 |
 | **Author** | Dermot Murphy |
 | **Reviewer** | Dermot Murphy |
@@ -21,6 +21,7 @@
 | v1.00 | 2026-08-13 | Dermot Murphy | Initial issue |
 | v1.01 | 2026-08-13 | Dermot Murphy | Added CI-010 (MISRA C:2012 rule-texts asset) under configuration control. |
 | v1.02 | 2026-08-13 | Dermot Murphy | Added CI-011 (release records: SVD instances and QT records) under configuration control, aligned with CCD-SPL2-001 §7. |
+| v1.03 | 2026-08-13 | Dermot Murphy | §5.3 Release job now Active; §5.4 DockerHub secrets added; document DockerHub publishing alongside GHCR (issue #4). |
 
 ---
 
@@ -128,18 +129,26 @@ docker build \
 | `Run-Integration-Tests` | Every push | Execute test scripts against known-defective sample sources |
 | `Lint-Dockerfile` (planned) | Every push | Run hadolint against the Dockerfile |
 | `Scan-Image` (planned) | Every push | Trivy / Docker Scout vulnerability scan |
-| `Release` | Push to `main` | Push image to container registry with resolved tags; create GitHub Release |
+| `Release` | Push to `main` | Build image, push to GHCR and DockerHub with `<version>-r<rev>` and `latest` tags, create annotated git tag and GitHub Release, record image digest in the Release body |
 
 ### 5.4 GitHub Actions Secrets
 
 | Secret | Purpose | Scope |
 |:--------------|:------------|:------------|
-| `GITHUB_TOKEN` | Built-in token used by the `Release` job to push to GitHub Container Registry (`ghcr.io`). No manual configuration required. | Automatic per workflow run |
-| `REGISTRY_TOKEN` (optional) | Only required if publishing to a registry other than `ghcr.io`. | Repository secret (Settings → Secrets and variables → Actions) |
+| `GITHUB_TOKEN` | Built-in token used by the `Release` job to push to GitHub Container Registry (`ghcr.io`) and create the GitHub Release. No manual configuration required. | Automatic per workflow run |
+| `DOCKERHUB_USERNAME` | DockerHub user account that owns the target repository `docker.io/<user>/cppcheckdocker`. | Repository secret (Settings → Secrets and variables → Actions) |
+| `DOCKERHUB_TOKEN` | DockerHub personal access token with `Read, Write, Delete` scope on the target repository. Not the account password. | Repository secret |
+| `WIKI_TOKEN` | Classic PAT with `repo` scope used by the `Publish-Wiki` job. `GITHUB_TOKEN` cannot push to `.wiki.git` and is not a substitute. | Repository secret |
 
 > **One-time setup for `ghcr.io` publishing:**
 > 1. Under repository Settings → Actions → General → Workflow permissions, grant "Read and write permissions" so `GITHUB_TOKEN` can push packages.
 > 2. On first push, the package appears under the owner's Packages tab; set visibility (public / internal / private) as needed.
+
+> **One-time setup for DockerHub publishing:**
+> 1. Create a DockerHub repository `<user>/cppcheckdocker`.
+> 2. Create a DockerHub PAT under Account Settings → Security → New Access Token with `Read, Write, Delete` scope, expiry set per your org's policy.
+> 3. Store the username as repository secret `DOCKERHUB_USERNAME` and the token as `DOCKERHUB_TOKEN`.
+> 4. The `Release` job on the next push to `main` will publish both `<version>-r<rev>` and `latest` tags to both registries.
 
 ---
 
@@ -166,4 +175,4 @@ The audit checks:
 
 ---
 
-*End of CCD-SUP8-001 v1.00*
+*End of CCD-SUP8-001 v1.03*
