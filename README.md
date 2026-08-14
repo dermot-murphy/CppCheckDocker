@@ -4,9 +4,15 @@ Ubuntu Docker image that ships the latest release of [cppcheck](https://github.c
 
 - **Cppcheck version:** 2.21.1 (pinned; overridable via build arg)
 - **Base:** `ubuntu:24.04`
-- **Image size:** ~130 MB
+- **Image size:** ~130 MB (SR-060 caps runtime image at 200 MB; see trend below)
 - **Non-root by default** (`cppcheck` user)
 - **MISRA C:2012 addon** bundled with the MISRA Consortium's official rule-texts file (CC BY-NC-ND 4.0)
+
+## Runtime image size trend
+
+The `Track-Image-Size` CI job records the built image size on every merge to `develop` and `main` and re-renders the chart below. The dashed line at 200 MiB is the SR-060 ceiling; raw data lives in `image_size_history.csv` on the [`gh-pages` branch](https://github.com/dermot-murphy/CppCheckDocker/tree/gh-pages).
+
+![Image size trend](https://raw.githubusercontent.com/dermot-murphy/CppCheckDocker/gh-pages/image_size_trend.svg)
 
 ## Quick start
 

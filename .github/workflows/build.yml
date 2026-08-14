@@ -443,6 +443,126 @@ jobs:
           git commit -m "Sync wiki from ${GITHUB_REF_NAME}@${GITHUB_SHA::7}"
           git push origin HEAD:master
 
+  Track-Image-Size:
+    name: Track image size (gh-pages)
+    needs: [Verify-Version, Run-Integration-Tests, Scan-Image]
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    concurrency:
+      group: image-size-tracker
+      cancel-in-progress: false
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+
+      - name: Install matplotlib
+        run: pip install matplotlib
+
+      - name: Download image artifact
+        uses: actions/download-artifact@v7
+        with:
+          name: cppcheck-image
+          path: /tmp
+
+      - name: Load image and measure size
+        id: size
+        run: |
+          docker load -i /tmp/image.tar
+          bytes=$(docker image inspect ${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }} --format '{{.Size}}')
+          human=$(numfmt --to=iec --suffix=B "$bytes")
+          echo "bytes=${bytes}" >> "$GITHUB_OUTPUT"
+          echo "Image size: ${human} (${bytes} bytes)"
+
+      - name: Checkout gh-pages branch (create if missing)
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -e
+          git clone --branch gh-pages --single-branch \
+            "https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}.git" \
+            gh-pages 2>/dev/null || {
+              echo "::notice::gh-pages branch does not exist; bootstrapping as orphan."
+              git clone "https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}.git" gh-pages
+              cd gh-pages
+              git checkout --orphan gh-pages
+              git rm -rf . 2>/dev/null || true
+              echo "timestamp,commit,branch,size_bytes" > image_size_history.csv
+              cat > README.md <<'README'
+          # CppCheckDocker gh-pages
+
+          This orphan branch stores the runtime image-size history for
+          CppCheckDocker (issue #42). Each merge to `develop` or `main` appends
+          a row to `image_size_history.csv` and re-renders
+          `image_size_trend.svg`.
+
+          - `image_size_history.csv` - `timestamp,commit,branch,size_bytes`
+          - `image_size_trend.svg` - chart rendered by `scripts/plot_image_size.py`
+
+          The chart is embedded in the repository README via
+          `raw.githubusercontent.com/<owner>/<repo>/gh-pages/image_size_trend.svg`.
+          README
+              cd ..
+            }
+
+      - name: Append row to history
+        working-directory: gh-pages
+        env:
+          SIZE_BYTES: ${{ steps.size.outputs.bytes }}
+          BRANCH_NAME: ${{ github.ref_name }}
+          COMMIT_SHA: ${{ github.sha }}
+        run: |
+          # Fetch the latest gh-pages state to reduce (but not eliminate)
+          # races between concurrent merges; concurrency group serialises jobs.
+          git fetch origin gh-pages
+          git reset --hard origin/gh-pages 2>/dev/null || true
+          if [ ! -f image_size_history.csv ]; then
+            echo "timestamp,commit,branch,size_bytes" > image_size_history.csv
+          fi
+          ts=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+          echo "${ts},${COMMIT_SHA},${BRANCH_NAME},${SIZE_BYTES}" >> image_size_history.csv
+          tail -n 3 image_size_history.csv
+
+      - name: Regenerate chart
+        working-directory: gh-pages
+        run: |
+          python ../scripts/plot_image_size.py \
+            --csv image_size_history.csv \
+            --out image_size_trend.svg
+
+      - name: Commit and push
+        working-directory: gh-pages
+        env:
+          COMMIT_SHA: ${{ github.sha }}
+          BRANCH_NAME: ${{ github.ref_name }}
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add image_size_history.csv image_size_trend.svg README.md 2>/dev/null || true
+          if git diff --cached --quiet; then
+            echo "::notice::No image-size change to publish."
+            exit 0
+          fi
+          git commit -m "Record image size for ${BRANCH_NAME}@${COMMIT_SHA::7}"
+          # Push with retry to survive the small window a concurrent job
+          # could still land between our fetch and push.
+          for attempt in 1 2 3; do
+            if git push origin HEAD:gh-pages; then
+              exit 0
+            fi
+            echo "push attempt ${attempt} failed; rebasing on latest gh-pages"
+            git fetch origin gh-pages
+            git rebase origin/gh-pages
+          done
+          echo "::error::Failed to push gh-pages after 3 attempts."
+          exit 1
+
   AllChecksPassed:
     name: All checks passed
     needs: [Lint, Verify-Version, Run-Integration-Tests, Scan-Image]
