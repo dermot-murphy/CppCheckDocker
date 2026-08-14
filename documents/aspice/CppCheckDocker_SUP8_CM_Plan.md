@@ -4,7 +4,7 @@
 | Field | Value |
 |:--------------|:------------|
 | **Document ID** | CCD-SUP8-001 |
-| **Version** | v1.06 |
+| **Version** | v1.07 |
 | **Date** | 2026-08-13 |
 | **Author** | Dermot Murphy |
 | **Reviewer** | Dermot Murphy |
@@ -25,6 +25,7 @@
 | v1.04 | 2026-08-13 | Dermot Murphy | §5.3 Release row: note skip condition when merged diff touches no image-affecting files (issue #24). |
 | v1.05 | 2026-08-13 | Dermot Murphy | Added CI-012 (deviation records: CCD-DEV-001, CCD-DEV-002) under configuration control; promote Draft -> Released (issue #23). |
 | v1.06 | 2026-08-13 | Dermot Murphy | §7 Configuration Audit: two audits (registry digest round-trip and version smoke on published image) now executed automatically by the `Release` job (issue #32, closes audit finding FIND-D). |
+| v1.07 | 2026-08-13 | Dermot Murphy | Added CI-013 (Claude Code memory mirror at `documents/aspice/claude_memory/`, maintained by `scripts/sync_claude_memory.py` via `claude-memory-sync` local pre-commit hook) under configuration control (issue #44). |
 
 ---
 
@@ -52,6 +53,7 @@ The following items are under configuration control:
 | CI-010 | MISRA C:2012 rule-texts asset | `documents/assets/misra_c_2012_for_cppcheck.txt` — MISRA Consortium file, CC BY-NC-ND 4.0. Bundled into runtime image at `/opt/cppcheck/share/cppcheck/misra_c_2012_for_cppcheck.txt`. Not modified from upstream release. | Git |
 | CI-011 | Release records | `documents/aspice/records/CCD-SVD-<tag>.md` (Software Version Description per release, per CCD-SVD-001 template) and `documents/aspice/records/CCD-QTR-<tag>.md` (Qualification Test records per release) | Git |
 | CI-012 | Process deviation records | `documents/aspice/CppCheckDocker_DEV001_Single_Engineer_Role_Collapse_Deviation.md` (CCD-DEV-001) and `documents/aspice/CppCheckDocker_DEV002_Independent_QA_Audit_Deviation.md` (CCD-DEV-002). Formal deviations issued under issue #23; retirement clauses recorded in each document. | Git |
+| CI-013 | Claude Code memory mirror | `documents/aspice/claude_memory/` — per-project memory (`MEMORY.md` index plus individual feedback/project/reference/user records) mirrored from the developer's user-scope Claude Code memory directory by `scripts/sync_claude_memory.py`. Kept current by the `claude-memory-sync` local pre-commit hook. Preserves accumulated project lessons across machines and teammates. | Git |
 
 ---
 
