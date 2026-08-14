@@ -520,7 +520,10 @@ jobs:
         run: |
           # Fetch the latest gh-pages state to reduce (but not eliminate)
           # races between concurrent merges; concurrency group serialises jobs.
-          git fetch origin gh-pages
+          # Both fetch and reset are guarded so the first-ever run (branch
+          # not yet on remote) proceeds with the local orphan branch created
+          # by the previous step.
+          git fetch origin gh-pages 2>/dev/null || true
           git reset --hard origin/gh-pages 2>/dev/null || true
           if [ ! -f image_size_history.csv ]; then
             echo "timestamp,commit,branch,size_bytes" > image_size_history.csv
