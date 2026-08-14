@@ -61,6 +61,22 @@ jobs:
           echo "Image size: $human ($size bytes)"
           echo "IMAGE_SIZE_BYTES=$size" >> "$GITHUB_ENV"
 
+      # SR-060: runtime image <= 200 MB. Fail the build on regression so an
+      # accidental size blow-up cannot merge. See CCD-SUP1-001 §3 gate row
+      # "Image size regression" and audit finding FIND-A in
+      # documents/aspice/CppCheckDocker_AUD_2026-08-13_ASPICE_L2_Audit.md.
+      - name: Fail on image size regression (SR-060)
+        env:
+          MAX_MB: '200'
+        run: |
+          max_bytes=$((MAX_MB * 1024 * 1024))
+          if [ "$IMAGE_SIZE_BYTES" -gt "$max_bytes" ]; then
+            human=$(numfmt --to=iec --suffix=B "$IMAGE_SIZE_BYTES")
+            echo "::error::Image size $human ($IMAGE_SIZE_BYTES bytes) exceeds SR-060 threshold of ${MAX_MB} MB. Investigate before merge."
+            exit 1
+          fi
+          echo "::notice::Image size ($IMAGE_SIZE_BYTES bytes) is within the SR-060 ${MAX_MB} MB threshold."
+
       - name: Export image to artifact
         run: docker save "${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}" -o /tmp/image.tar
 
@@ -330,14 +346,63 @@ jobs:
             --title "CppCheckDocker ${IMAGE_TAG_ID}" \
             --notes "${notes}"
 
+      # CCD-SUP8-001 §7 Configuration Audit - closes FIND-D from
+      # CCD-AUD-2026-08-13-L2. Verifies that the tag we just pushed resolves,
+      # in each registry, back to the digest reported by the build-push step,
+      # and that cppcheck --version in the published image matches the pinned
+      # ARG. Fails the release on any mismatch.
+      - name: Configuration audit - registry digest round-trip (SUP.8 §7)
+        if: steps.filter.outputs.image == 'true'
+        env:
+          GHCR_TAG: ${{ steps.repo.outputs.ghcr }}:${{ steps.rev.outputs.tag }}
+          DOCKERHUB_TAG: ${{ env.DOCKERHUB_REPO }}:${{ steps.rev.outputs.tag }}
+          PUSH_DIGEST: ${{ steps.push.outputs.digest }}
+        run: |
+          set -e
+          echo "Verifying registries resolve tag to pushed digest: $PUSH_DIGEST"
+          fail=0
+          for tag_ref in "$GHCR_TAG" "$DOCKERHUB_TAG"; do
+            observed=$(docker buildx imagetools inspect "$tag_ref" --format '{{.Manifest.Digest}}')
+            echo "  $tag_ref -> $observed"
+            if [ "$observed" != "$PUSH_DIGEST" ]; then
+              echo "::error::Digest mismatch at $tag_ref: expected $PUSH_DIGEST, got $observed"
+              fail=1
+            fi
+          done
+          if [ "$fail" -ne 0 ]; then
+            exit 1
+          fi
+          echo "::notice::Configuration audit (digest round-trip) passed: both registries resolve $PUSH_DIGEST for tag ${{ steps.rev.outputs.tag }}."
+
+      - name: Configuration audit - version smoke on published image (SUP.8 §7)
+        if: steps.filter.outputs.image == 'true'
+        env:
+          GHCR_TAG: ${{ steps.repo.outputs.ghcr }}:${{ steps.rev.outputs.tag }}
+        run: |
+          set -e
+          pulled=$(docker run --rm "$GHCR_TAG" --version)
+          expected="Cppcheck ${{ env.CPPCHECK_VERSION }}"
+          echo "Pulled : $pulled"
+          echo "Expected: $expected"
+          if [ "$pulled" != "$expected" ]; then
+            echo "::error::Published image version mismatch: expected '$expected', got '$pulled'"
+            exit 1
+          fi
+          echo "::notice::Configuration audit (version smoke on published image) passed."
+
   Publish-Wiki:
-    name: Publish ASPICE documents to Wiki
+    name: Publish User Guide and ASPICE documents to Wiki
     needs: [Verify-Version, Run-Integration-Tests]
     if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop')
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
         uses: actions/checkout@v5
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
 
       - name: Clone wiki
         env:
@@ -349,32 +414,21 @@ jobs:
           fi
           git clone "https://x-access-token:${WIKI_TOKEN}@github.com/${{ github.repository }}.wiki.git" wiki
 
-      - name: Sync ASPICE documents into wiki
+      # Wipe wiki contents so removed source docs disappear from the wiki. The
+      # .git dir is preserved; a follow-up `git add -A` re-adds every generated
+      # file and stages the deletions in one commit.
+      - name: Reset wiki working tree
+        working-directory: wiki
         run: |
-          # Wiki page names come from the filename stem; slashes/spaces aren't allowed in wiki filenames.
-          # Copy each markdown file to the wiki root with its bare basename.
-          mkdir -p wiki
-          shopt -s nullglob
-          for src in documents/aspice/*.md; do
-            base=$(basename "$src")
-            cp "$src" "wiki/$base"
-          done
+          find . -mindepth 1 -maxdepth 1 ! -name '.git' -exec rm -rf {} +
 
-          # Build a Home.md index pointing at each document.
-          {
-            echo "# CppCheckDocker — ASPICE Documents"
-            echo
-            echo "Auto-published from \`documents/aspice/\` on branch \`${GITHUB_REF_NAME}\` at commit \`${GITHUB_SHA::7}\`."
-            echo
-            echo "| Document | ASPICE Process |"
-            echo "|:---------|:----------------|"
-            for src in documents/aspice/*.md; do
-              base=$(basename "$src" .md)
-              # Extract the ASPICE Process line from the document header table if present.
-              proc=$(grep -m1 -E '^\| \*\*ASPICE Process\*\* \|' "$src" | sed -E 's/.*\| ([^|]+) \|$/\1/' | sed 's/^ *//; s/ *$//')
-              echo "| [$base]($base) | ${proc:-—} |"
-            done
-          } > wiki/Home.md
+      - name: Regenerate wiki content
+        run: |
+          python scripts/generate_wiki.py \
+            --repo . \
+            --wiki wiki \
+            --ref "${GITHUB_REF_NAME}" \
+            --sha "${GITHUB_SHA}"
 
       - name: Commit and push wiki
         working-directory: wiki
@@ -386,8 +440,131 @@ jobs:
             echo "No wiki changes to publish."
             exit 0
           fi
-          git commit -m "Sync ASPICE documents from ${GITHUB_REF_NAME}@${GITHUB_SHA::7}"
+          git commit -m "Sync wiki from ${GITHUB_REF_NAME}@${GITHUB_SHA::7}"
           git push origin HEAD:master
+
+  Track-Image-Size:
+    name: Track image size (gh-pages)
+    needs: [Verify-Version, Run-Integration-Tests, Scan-Image]
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    concurrency:
+      group: image-size-tracker
+      cancel-in-progress: false
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+
+      - name: Install matplotlib
+        run: pip install matplotlib
+
+      - name: Download image artifact
+        uses: actions/download-artifact@v7
+        with:
+          name: cppcheck-image
+          path: /tmp
+
+      - name: Load image and measure size
+        id: size
+        run: |
+          docker load -i /tmp/image.tar
+          bytes=$(docker image inspect ${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }} --format '{{.Size}}')
+          human=$(numfmt --to=iec --suffix=B "$bytes")
+          echo "bytes=${bytes}" >> "$GITHUB_OUTPUT"
+          echo "Image size: ${human} (${bytes} bytes)"
+
+      - name: Checkout gh-pages branch (create if missing)
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -e
+          git clone --branch gh-pages --single-branch \
+            "https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}.git" \
+            gh-pages 2>/dev/null || {
+              echo "::notice::gh-pages branch does not exist; bootstrapping as orphan."
+              git clone "https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}.git" gh-pages
+              cd gh-pages
+              git checkout --orphan gh-pages
+              git rm -rf . 2>/dev/null || true
+              echo "timestamp,commit,branch,size_bytes" > image_size_history.csv
+              cat > README.md <<'README'
+          # CppCheckDocker gh-pages
+
+          This orphan branch stores the runtime image-size history for
+          CppCheckDocker (issue #42). Each merge to `develop` or `main` appends
+          a row to `image_size_history.csv` and re-renders
+          `image_size_trend.svg`.
+
+          - `image_size_history.csv` - `timestamp,commit,branch,size_bytes`
+          - `image_size_trend.svg` - chart rendered by `scripts/plot_image_size.py`
+
+          The chart is embedded in the repository README via
+          `raw.githubusercontent.com/<owner>/<repo>/gh-pages/image_size_trend.svg`.
+          README
+              cd ..
+            }
+
+      - name: Append row to history
+        working-directory: gh-pages
+        env:
+          SIZE_BYTES: ${{ steps.size.outputs.bytes }}
+          BRANCH_NAME: ${{ github.ref_name }}
+          COMMIT_SHA: ${{ github.sha }}
+        run: |
+          # Fetch the latest gh-pages state to reduce (but not eliminate)
+          # races between concurrent merges; concurrency group serialises jobs.
+          # Both fetch and reset are guarded so the first-ever run (branch
+          # not yet on remote) proceeds with the local orphan branch created
+          # by the previous step.
+          git fetch origin gh-pages 2>/dev/null || true
+          git reset --hard origin/gh-pages 2>/dev/null || true
+          if [ ! -f image_size_history.csv ]; then
+            echo "timestamp,commit,branch,size_bytes" > image_size_history.csv
+          fi
+          ts=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+          echo "${ts},${COMMIT_SHA},${BRANCH_NAME},${SIZE_BYTES}" >> image_size_history.csv
+          tail -n 3 image_size_history.csv
+
+      - name: Regenerate chart
+        working-directory: gh-pages
+        run: |
+          python ../scripts/plot_image_size.py \
+            --csv image_size_history.csv \
+            --out image_size_trend.svg
+
+      - name: Commit and push
+        working-directory: gh-pages
+        env:
+          COMMIT_SHA: ${{ github.sha }}
+          BRANCH_NAME: ${{ github.ref_name }}
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add image_size_history.csv image_size_trend.svg README.md 2>/dev/null || true
+          if git diff --cached --quiet; then
+            echo "::notice::No image-size change to publish."
+            exit 0
+          fi
+          git commit -m "Record image size for ${BRANCH_NAME}@${COMMIT_SHA::7}"
+          # Push with retry to survive the small window a concurrent job
+          # could still land between our fetch and push.
+          for attempt in 1 2 3; do
+            if git push origin HEAD:gh-pages; then
+              exit 0
+            fi
+            echo "push attempt ${attempt} failed; rebasing on latest gh-pages"
+            git fetch origin gh-pages
+            git rebase origin/gh-pages
+          done
+          echo "::error::Failed to push gh-pages after 3 attempts."
+          exit 1
 
   AllChecksPassed:
     name: All checks passed

@@ -4,7 +4,7 @@
 | Field | Value |
 |:--------------|:------------|
 | **Document ID** | CCD-RTM-001 |
-| **Version** | v1.05 |
+| **Version** | v1.07 |
 | **Date** | 2026-08-13 |
 | **Author** | Dermot Murphy |
 | **Reviewer** | Dermot Murphy |
@@ -24,6 +24,8 @@
 | v1.03 | 2026-08-13 | Dermot Murphy | Extended traceability key to include CCD-ACQ4-001 (Supplier Monitoring Plan) with the three suppliers SUP-001..SUP-003. |
 | v1.04 | 2026-08-13 | Dermot Murphy | Updated NFR-002 traceability: `Scan-Image` gate now Active via trivy (issue #6). |
 | v1.05 | 2026-08-13 | Dermot Murphy | Promote Draft -> Released as part of the ASPICE audit-readiness sweep (issue #23); corrected trailing "End of" version citation. |
+| v1.06 | 2026-08-13 | Dermot Murphy | §3a NFR-001 row: CI Gate corrected from stale `Lint-Dockerfile (planned)` to `Lint (pre-commit)` (Active) - hadolint has been Active since CCD-SUP1-001 v1.01 / issue #5. Issue #30, closes audit finding FIND-B. |
+| v1.07 | 2026-08-13 | Dermot Murphy | SR-060 verification: cite the per-merge image-size trend chart (`gh-pages/image_size_trend.svg`, produced by `Track-Image-Size`) as ancillary evidence alongside UVT-050 / QT-008 (issue #42). |
 
 ---
 
@@ -78,7 +80,7 @@ Non-functional requirements (SRS §12) are cross-cutting obligations that apply 
 
 | NFR ID | Non-Functional Requirement Summary | Verification Method | CI Gate / Evidence |
 |:--------------|:-----------------------------------|:--------------------|:--------------------|
-| NFR-001 | Dockerfile conforms to hadolint default rule set | Static analysis | `Lint-Dockerfile` (planned) |
+| NFR-001 | Dockerfile conforms to hadolint default rule set | Static analysis | `Lint (pre-commit)` (Active; see CCD-SUP1-001 §3 and §5.1) |
 | NFR-002 | No CRITICAL/HIGH CVEs in published image | Vulnerability scan | `Scan-Image` (trivy, active) |
 | NFR-003 | Base image tag pinned via ARG (not `:latest`) | Review | PR review checklist; verified by inspecting `Dockerfile` |
 | NFR-004 | `--no-install-recommends` used on all apt installs | Review | PR review checklist; hadolint DL3015 |
@@ -87,6 +89,8 @@ Non-functional requirements (SRS §12) are cross-cutting obligations that apply 
 | NFR-007 | Review checklist executed at each PR | Process | PR reviewer confirmation |
 | NFR-008 | OCI `LABEL` metadata present | Test | UVT-034; QT-009 |
 | NFR-009 | All components under permissive/copyleft OSS licences compatible with redistribution | Review | Manual review; SPDX identifiers in labels |
+
+**Ancillary evidence for SR-060 (Runtime image size ≤ 200 MB):** the `Track-Image-Size` CI job (see `.github/workflows/build.yml`) appends a row to `image_size_history.csv` on the `gh-pages` branch on every merge to `develop` or `main` and re-renders `image_size_trend.svg`. The chart is embedded in `README.md` and draws the 200 MiB SR-060 ceiling. This is a monitoring artefact; the hard verification remains UVT-050 (per-build gate) and QT-008 (release check).
 
 ---
 
@@ -250,4 +254,4 @@ When any SR is added, modified, or retired, this matrix must be updated in the s
 
 ---
 
-*End of CCD-RTM-001 v1.05*
+*End of CCD-RTM-001 v1.07*

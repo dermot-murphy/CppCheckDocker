@@ -7,15 +7,15 @@ repos:
     rev: v5.0.0
     hooks:
       - id: trailing-whitespace
-        exclude: '(\.patch$|^documents/assets/)'
+        exclude: '(\.patch$|^documents/assets/|^documents/aspice/claude_memory/)'
       - id: end-of-file-fixer
-        exclude: '(\.patch$|^documents/assets/)'
+        exclude: '(\.patch$|^documents/assets/|^documents/aspice/claude_memory/)'
       - id: check-added-large-files
         args: ['--maxkb=1024']
       - id: check-merge-conflict
       - id: mixed-line-ending
         args: ['--fix=lf']
-        exclude: '(\.(bat|cmd|ps1)$|^documents/assets/)'
+        exclude: '(\.(bat|cmd|ps1)$|^documents/assets/|^documents/aspice/claude_memory/)'
 
   - repo: https://github.com/adrienverge/yamllint
     rev: v1.35.1
@@ -28,3 +28,13 @@ repos:
     hooks:
       - id: hadolint-docker
         args: ['--config', '.hadolint.yaml']
+
+  - repo: local
+    hooks:
+      - id: claude-memory-sync
+        name: Mirror Claude Code memory into the repo
+        entry: python scripts/sync_claude_memory.py
+        language: system
+        pass_filenames: false
+        always_run: true
+        stages: [pre-commit]

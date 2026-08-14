@@ -1,0 +1,2 @@
+- [PR `Closes` keyword per issue](feedback_github_closes_keyword.md) — comma-list after one keyword only closes the first; use `closes #21, closes #23, closes #24`.
+- [Issues close on main merge, not develop](project_issues_close_on_main_merge.md) — gitflow: develop is integration, main is release; add `pending-merge` label immediately after each develop merge.

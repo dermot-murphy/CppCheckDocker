@@ -4,7 +4,7 @@
 | Field | Value |
 |:--------------|:------------|
 | **Document ID** | CCD-SUP1-001 |
-| **Version** | v1.03 |
+| **Version** | v1.05 |
 | **Date** | 2026-08-13 |
 | **Author** | Dermot Murphy |
 | **Reviewer** | Dermot Murphy |
@@ -22,6 +22,8 @@
 | v1.01 | 2026-08-13 | Dermot Murphy | Move hadolint (§5.1) from Planned to Active; add pre-commit local + CI enforcement (issue #5) |
 | v1.02 | 2026-08-13 | Dermot Murphy | Move vulnerability scan (§5.2) from Planned to Active; document `.trivyignore` process (issue #6) |
 | v1.03 | 2026-08-13 | Dermot Murphy | Add §11 referencing CCD-DEV-001 (single-engineer role collapse) and CCD-DEV-002 (independent QA audit gap); promote Draft -> Released (issue #23). |
+| v1.04 | 2026-08-13 | Dermot Murphy | §3 image-size-regression gate moved from Planned to Active; implemented as a fail-gated step inside the `Build-Image` job (issue #29, closes audit finding FIND-A). |
+| v1.05 | 2026-08-13 | Dermot Murphy | §3 image-size-regression gate row extended to cite the per-merge trend chart (`gh-pages/image_size_trend.svg`) produced by the new `Track-Image-Size` job (issue #42). |
 
 ---
 
@@ -60,7 +62,7 @@ Quality is enforced via CI pipeline gates. A gate failure blocks merge.
 | Dockerfile lint | `Lint` (pre-commit) | `hadolint` | **Active** | Fix lint warning |
 | YAML lint | `Lint` (pre-commit) | `yamllint` | **Active** | Fix lint warning |
 | Image vulnerability scan | `Scan-Image` | `trivy` | **Active** | Fix or accept CVE with justification in `.trivyignore` |
-| Image size regression | `Check-Image-Size` | `docker image inspect` + threshold check | **Planned** | Investigate size increase |
+| Image size regression (SR-060, <= 200 MB) | `Build-Image` (step `Fail on image size regression (SR-060)`) for the hard gate; `Track-Image-Size` for the trend | `docker image inspect --format '{{.Size}}'` + numeric threshold in bytes; per-merge history in `image_size_history.csv` on the `gh-pages` branch; chart in `image_size_trend.svg` embedded in `README.md` | **Active** | Investigate size increase; suppress with justification only via a temporary threshold bump in the workflow, reviewed at next release. Trend chart shows drift toward the ceiling long before the gate fires. |
 | All checks | `AllChecksPassed` | Aggregator | **Active** | All above active gates must pass |
 
 Gates marked **Planned** are defined in this document but not yet wired into the workflow. They are included to define the target state and will be activated as the CI infrastructure matures.
@@ -210,4 +212,4 @@ Both deviations were opened as part of GitHub issue #23 (ASPICE audit-readiness 
 
 ---
 
-*End of CCD-SUP1-001 v1.03*
+*End of CCD-SUP1-001 v1.04*

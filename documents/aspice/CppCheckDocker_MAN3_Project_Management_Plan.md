@@ -4,7 +4,7 @@
 | Field | Value |
 |:--------------|:------------|
 | **Document ID** | CCD-MAN3-001 |
-| **Version** | v1.03 |
+| **Version** | v1.04 |
 | **Date** | 2026-08-13 |
 | **Author** | Dermot Murphy |
 | **Reviewer** | Dermot Murphy |
@@ -22,6 +22,7 @@
 | v1.01 | 2026-08-13 | Dermot Murphy | Added WBS-15 (Software Release process) and WBS-16 (Software Version Description) for the SPL.2 process area. |
 | v1.02 | 2026-08-13 | Dermot Murphy | Added WBS-17 (Supplier Monitoring) for the ACQ.4 process area covering cppcheck upstream, Ubuntu base image, and MISRA rule-texts as COTS suppliers. |
 | v1.03 | 2026-08-13 | Dermot Murphy | §3 single-engineer note now cites CCD-DEV-001 as the formal deviation record; promote Draft -> Released (issue #23). |
+| v1.04 | 2026-08-13 | Dermot Murphy | §9 Monitoring and Control: named the per-merge image-size trend chart (`gh-pages/image_size_trend.svg`, produced by `Track-Image-Size` job) as a monitored artefact (issue #42). |
 
 ---
 
@@ -155,7 +156,7 @@ Progress is monitored through:
 - **PR review history:** Provides audit trail of changes and decisions
 - **ASPICE document versions:** Updated when significant requirements or design changes occur
 - **Traceability matrix reviews:** Performed before each release to confirm coverage
-- **Image size and layer count:** Reported in each build log; regression against previous release triggers review
+- **Image size and layer count:** Reported in each build log; the `Track-Image-Size` CI job appends a row to `image_size_history.csv` on the `gh-pages` branch on every merge to `develop` or `main` and re-renders `image_size_trend.svg`, which is embedded in the top-level `README.md`. The SR-060 ceiling (200 MiB) is drawn on the chart so drift toward the hard gate is visible long before it fires. Regression against the previous release triggers review.
 
 ---
 
@@ -169,4 +170,4 @@ Progress is monitored through:
 
 ---
 
-*End of CCD-MAN3-001 v1.03*
+*End of CCD-MAN3-001 v1.04*
